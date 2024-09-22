@@ -1,0 +1,7 @@
+{
+  "id": "io.plexi.apps.minesweeper",
+  "name": "Minesweeper",
+  "ui": true,
+  "author": "Plexi",
+  "description": "You don't actually like this game but you think you do."
+}

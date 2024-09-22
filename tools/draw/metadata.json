@@ -1,0 +1,7 @@
+{
+  "id": "io.plexi.apps.draw",
+  "name": "Draw",
+  "ui": true,
+  "author": "Plexi",
+  "description": "Simple image editing app"
+}

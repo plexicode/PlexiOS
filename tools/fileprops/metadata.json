@@ -1,0 +1,7 @@
+{
+  "id": "io.plexi.tools.fileprops",
+  "name": "Properties",
+  "ui": true,
+  "author": "Plexi",
+  "description": "Display information about a file or directory."
+}

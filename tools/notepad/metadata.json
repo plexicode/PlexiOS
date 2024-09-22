@@ -1,0 +1,7 @@
+{
+  "id": "io.plexi.apps.notepad",
+  "name": "Notepad",
+  "ui": true,
+  "author": "Plexi",
+  "description": "Plain Text Editor"
+}

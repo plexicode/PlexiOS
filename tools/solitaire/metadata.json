@@ -1,0 +1,7 @@
+{
+  "id": "io.plexi.apps.solitaire",
+  "name": "Solitaire",
+  "ui": true,
+  "author": "Plexi",
+  "description": "Classic single player card game for people that really should stop procrastinating on something else."
+}

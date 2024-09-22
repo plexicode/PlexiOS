@@ -1,0 +1,7 @@
+{
+  "id": "io.plexi.tools.proclist",
+  "name": "Process List",
+  "ui": true,
+  "author": "Plexi",
+  "description": "Shows the current running processes."
+}

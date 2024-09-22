@@ -1,0 +1,7 @@
+{
+  "id": "io.plexi.tools.files",
+  "name": "Files",
+  "ui": true,
+  "author": "Plexi",
+  "description": "Browse files."
+}

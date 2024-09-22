@@ -1,0 +1,26 @@
+{
+    "HEADER_ACCOUNT": "Account",
+    "ACCT_NAME_AND_IMAGE": "Account Name & Image",
+    "ACCT_PASS_SEC": "Password & Security",
+
+    "HEADER_PROGRAMS": "Programs",
+    "PROG_INSTALLED": "Installed",
+    "PROG_FILE_TYPES": "File Types",
+    "PROG_DEV_SETTINGS": "Developer Settings",
+
+    "HEADER_APPEARANCE": "Appearance",
+    "VIS_BACKGROUND": "Background",
+    "VIS_SCREENSAVER": "Screensaver",
+    "VIS_THEME": "Theme",
+    "VIS_TASKBAR": "Taskbar",
+    "VIS_EFFECTS": "Visual Effects",
+
+    "HEADER_LANG_REG": "Language & Region",
+    "LANG": "Language",
+    "DATE_TIME": "Date & Time",
+
+    "HEADER_SYSTEM": "System Settings",
+    "SYS_ENV_VAR": "Environment Variables",
+    "SYS_DISK_EXPORT": "Export Disk",
+    "SYS_PERMISSIONS": "Permissions"
+}

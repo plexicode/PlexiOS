@@ -1,0 +1,7 @@
+{
+  "id": "io.plexi.tools.settings",
+  "name": "Settings",
+  "ui": true,
+  "author": "Plexi",
+  "description": "Global Settings"
+}

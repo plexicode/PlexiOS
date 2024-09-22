@@ -1,0 +1,7 @@
+{
+  "id": "io.plexi.apps.youtube",
+  "name": "YouTube Player",
+  "ui": true,
+  "author": "Plexi",
+  "description": "Makes individual youtube video URLs behave like video files"
+}

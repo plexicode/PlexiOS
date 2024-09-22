@@ -1,0 +1,7 @@
+{
+  "id": "io.plexi.tools.terminal",
+  "name": "Terminal",
+  "ui": true,
+  "author": "Plexi",
+  "description": "A bash-like terminal window to run commands."
+}

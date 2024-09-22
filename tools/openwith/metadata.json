@@ -1,0 +1,7 @@
+{
+  "id": "io.plexi.tools.openwith",
+  "name": "Open with...",
+  "ui": true,
+  "author": "Plexi",
+  "description": "System app picker for opening files."
+}

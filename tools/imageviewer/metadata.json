@@ -1,0 +1,7 @@
+{
+  "id": "io.plexi.apps.imageviewer",
+  "name": "Image Viewer",
+  "ui": true,
+  "author": "Plexi",
+  "description": "Simple image viewer with some slideshow and basic touch-up functionality"
+}

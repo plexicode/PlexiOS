@@ -1,0 +1,7 @@
+{
+  "id": "io.plexi.tools.sleep",
+  "name": "Sleep",
+  "ui": false,
+  "author": "Plexi",
+  "description": "Pass a number of seconds as a command line argument and this process will just run silently for that long. Meant for use within automated scripts."
+}

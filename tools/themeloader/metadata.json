@@ -1,0 +1,7 @@
+{
+  "id": "io.plexi.tools.themeloader",
+  "name": "Theme Loader",
+  "ui": true,
+  "author": "Plexi",
+  "description": "Takes a file path to a .theme file and loads it"
+}

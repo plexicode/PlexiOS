@@ -1,0 +1,7 @@
+{
+  "id": "io.plexi.tools.screensaver",
+  "name": "Screensaver Runner",
+  "ui": true,
+  "author": "Plexi",
+  "description": "This app runs the screensavers"
+}
