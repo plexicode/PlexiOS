@@ -980,6 +980,11 @@ const Util = (() => {
     }
     return false;
   };
+
+  let getTermCmdSet = () => {
+    return new Set('cat cd chmod cp echo grep head less ls mkdir more mv pwd rm rmdir set tail touch'.split(' '));
+  };
+
   return Object.freeze({
     argInterceptor,
     asFunction,
@@ -1006,6 +1011,7 @@ const Util = (() => {
     formatHrMin,
     generateId,
     getCommonFileType,
+    getTermCmdSet,
     getTime,
     getType,
     identity,
@@ -1261,7 +1267,12 @@ let createExecutionEngine = os => {
     stderr: createPipe().setListener(t => console.error(t)),
   };
 
+  let termLookup = Util.getTermCmdSet();
+
   let launchVirtualJavaScript = async (id, procInfo, args) => {
+    if (termLookup.has(id.split('.').pop())) {
+      await HtmlUtil.loadComponent('TerminalCommands');
+    }
     let runnerFn = await staticVirtualJsLoader.loadJavaScript('app', id);
     await Promise.resolve(runnerFn(os, procInfo, args));
   };

@@ -40,8 +40,8 @@ PlexiOS.registerJavaScript('image', 'default', async (imgUtil) => {
   await imgUtil.installApp('/system/tools/terminal', 'io.plexi.tools.terminal', { name: "Terminal", inLauncher: true, iconB64: PLEXI_IMAGE_B64('tools/terminal/icon.png') });
   await imgUtil.installApp('/system/tools/themeloader', 'io.plexi.tools.themeloader', { name: "Theme Loader", iconB64: PLEXI_IMAGE_B64('tools/themeloader/icon.png') });
 
-  for (let t of 'cat cd chmod cp echo grep head less ls mkdir more mv pwd rm rmdir set tail touch'.split(' ')) {
-    await imgUtil.installApp('/system/tools/' + t, 'io.plexi.terminal.' + t, { name: t });
+  for (let t of [...PlexiOS.Util.getTermCmdSet()]) {
+    await imgUtil.installApp('/system/tools/' + t, 'io.plexi.tools.' + t, { name: t });
   }
 
   await imgUtil.pinToTaskbar('/system/tools/files');

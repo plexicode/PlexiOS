@@ -5,7 +5,6 @@ repo. Please pardon the dust.
 
 ## TODOs
 
-- terminal commands are still missing since they're not quite a normal app-tool
 - remove tools from registering app metadata. This should just be built in
 - virtual javascript apps and tools have all been converted to just "tools" and
   the ones that are really just apps (e.g. notepad, solitaire, etc) should be

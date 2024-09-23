@@ -6,7 +6,12 @@ let createExecutionEngine = os => {
     stderr: createPipe().setListener(t => console.error(t)),
   };
 
+  let termLookup = Util.getTermCmdSet();
+
   let launchVirtualJavaScript = async (id, procInfo, args) => {
+    if (termLookup.has(id.split('.').pop())) {
+      await HtmlUtil.loadComponent('TerminalCommands');
+    }
     let runnerFn = await staticVirtualJsLoader.loadJavaScript('app', id);
     await Promise.resolve(runnerFn(os, procInfo, args));
   };

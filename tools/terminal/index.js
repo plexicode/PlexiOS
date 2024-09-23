@@ -2,7 +2,7 @@ const APP_MAIN = async (os, procInfo, args) => {
   const { div, span } = HtmlUtil;
 
   // pre-emptively ensure the commands are loaded to potentially reduce the initial delay.
-  PlexiOS.loadJavaScript('app', 'io.plexi.terminal.ls');
+  PlexiOS.HtmlUtil.loadComponent('TerminalCommands');
 
   let cwd = args[0] || procInfo.cwd;
   let session = await PlexiOS.terminalSession(os, cwd, procInfo.env);
