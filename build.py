@@ -15,6 +15,7 @@ SKIP_THESE = (
 
 REQUIRED_COMPONENTS = (
   'ItemList',
+  'TreeList',
   'FileList',
   'IconBrowser',
   'DividerPane',
@@ -132,14 +133,17 @@ def hacky_perform_text_inclusion(text):
 def hacky_inclusions(code):
   code = code.replace('\r\n', '\n').strip()
   code = hacky_perform_text_inclusion(code)
-  # code = hacky_perform_image_b64_inclusion(code)
   return code + '\n'
 
 def generate_html_host():
   scripts = [
     './plexios.js',
   ]
-  loaders = ''
+  loaders = '''
+    PlexiOS.registerJavaScriptLoader('app', id => PlexiOS.Util.loadScript('./tools/' + id.split('.').pop() + '.js'));
+    PlexiOS.registerJavaScriptLoader('component', id => PlexiOS.Util.loadScript('./components/' + id.split('.').pop() + '.js'));
+  '''
+
   files_dir = '.'
   config = {
     'headless': False,
@@ -156,15 +160,17 @@ def generate_html_host():
     <title>Plexi OS Test Page</title>
     ''', '\n'.join(scripts), '''
     <script>
-
-window.addEventListener('load', () => {
+let os;
+let fs;
+window.addEventListener('load', async () => {
   let filesDir = ''', "'", files_dir, "'", ''';
 
   ''', loaders, '''
 
   const config = ''', json.dumps(config), ''';
 
-  PlexiOS.create(config);
+  os = await PlexiOS.create(config);
+  fs = os.FsRoot;
 });
 
     </script>
@@ -173,7 +179,7 @@ window.addEventListener('load', () => {
 
   </body>
 </html>''']).strip()
-  
+
   return html
 
 def export_tool_app(id):

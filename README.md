@@ -1,6 +1,6 @@
 # PlexiOS
 
-This is being slowly copied and fixed/rewritten piece by piece from a private 
+This is being slowly copied and fixed/rewritten piece by piece from a private
 repo. Please pardon the dust.
 
 ## TODOs
@@ -16,4 +16,4 @@ repo. Please pardon the dust.
   - implement ThemeScript runtime
 - consolidator should combine images into an atlas. This universal atlas should
   be applied to all PLEXI_IMAGE_B64 text preprocessing directives.
-
+- string table is not being exported by build.py

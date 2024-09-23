@@ -30,17 +30,15 @@ PlexiOS.registerJavaScript('image', 'default', async (imgUtil) => {
 
   await imgUtil.makeTextFile('/system/config/settings.json', '{}');
 
-  /*
-  await imgUtil.installApp('/system/tools/fileprops', 'io.plexi.tools.fileprops', { name: "File Properties", iconB64: PLEXI_ IMAGE_B64('apps/tools/fileprops/icon.png') });
-  await imgUtil.installApp('/system/tools/files', 'io.plexi.tools.files', { name: "File Browser", inLauncher: true, iconB64: PLEXI_ IMAGE_B64('apps/tools/files/icon.png') });
-  await imgUtil.installApp('/system/tools/openwith', 'io.plexi.tools.openwith', { name: "Open with...", iconB64: PLEXI_ IMAGE_B64('apps/tools/openwith/icon.png') });
-  await imgUtil.installApp('/system/tools/proclist', 'io.plexi.tools.proclist', { name: "Process List", iconB64: PLEXI_ IMAGE_B64('apps/tools/proclist/icon.png') });
-  await imgUtil.installApp('/system/tools/screensaver', 'io.plexi.tools.screensaver', { name: "Screensaver", iconB64: PLEXI_ IMAGE_B64('apps/tools/screensaver/icon.png') });
-  await imgUtil.installApp('/system/tools/settings', 'io.plexi.tools.settings', { name: "Settings", inLauncher: true, iconB64: PLEXI_ IMAGE_B64('apps/tools/settings/icon.png') });
-  await imgUtil.installApp('/system/tools/sleep', 'io.plexi.tools.sleep', { name: "Sleep", iconB64: PLEXI_ IMAGE_B64('apps/tools/sleep/icon.png') });
-  await imgUtil.installApp('/system/tools/terminal', 'io.plexi.tools.terminal', { name: "Terminal", inLauncher: true, iconB64: PLEXI_ IMAGE_B64('apps/tools/terminal/icon.png') });
-  await imgUtil.installApp('/system/tools/themeloader', 'io.plexi.tools.themeloader', { name: "Theme Loader", iconB64: PLEXI_ IMAGE_B64('apps/tools/themeloader/icon.png') });
-  */
+  await imgUtil.installApp('/system/tools/fileprops', 'io.plexi.tools.fileprops', { name: "File Properties", iconB64: PLEXI_IMAGE_B64('tools/fileprops/icon.png') });
+  await imgUtil.installApp('/system/tools/files', 'io.plexi.tools.files', { name: "File Browser", inLauncher: true, iconB64: PLEXI_IMAGE_B64('tools/files/icon.png') });
+  await imgUtil.installApp('/system/tools/openwith', 'io.plexi.tools.openwith', { name: "Open with...", iconB64: PLEXI_IMAGE_B64('tools/openwith/icon.png') });
+  await imgUtil.installApp('/system/tools/proclist', 'io.plexi.tools.proclist', { name: "Process List", iconB64: PLEXI_IMAGE_B64('tools/proclist/icon.png') });
+  await imgUtil.installApp('/system/tools/screensaver', 'io.plexi.tools.screensaver', { name: "Screensaver", iconB64: PLEXI_IMAGE_B64('tools/screensaver/icon.png') });
+  await imgUtil.installApp('/system/tools/settings', 'io.plexi.tools.settings', { name: "Settings", inLauncher: true, iconB64: PLEXI_IMAGE_B64('tools/settings/icon.png') });
+  await imgUtil.installApp('/system/tools/sleep', 'io.plexi.tools.sleep', { name: "Sleep", iconB64: PLEXI_IMAGE_B64('tools/sleep/icon.png') });
+  await imgUtil.installApp('/system/tools/terminal', 'io.plexi.tools.terminal', { name: "Terminal", inLauncher: true, iconB64: PLEXI_IMAGE_B64('tools/terminal/icon.png') });
+  await imgUtil.installApp('/system/tools/themeloader', 'io.plexi.tools.themeloader', { name: "Theme Loader", iconB64: PLEXI_IMAGE_B64('tools/themeloader/icon.png') });
 
   for (let t of 'cat cd chmod cp echo grep head less ls mkdir more mv pwd rm rmdir set tail touch'.split(' ')) {
     await imgUtil.installApp('/system/tools/' + t, 'io.plexi.terminal.' + t, { name: t });
