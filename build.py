@@ -82,6 +82,11 @@ def _list_files_rec_impl(rel, abs, acc):
     else:
       acc.append(file_rel)
 
+def file_get_parent(path):
+  return os.sep.join(path.replace('\\', '/').split('/')[:-1])
+
+def ensure_directory_exists(path):
+  os.makedirs(path.replace('/', os.sep), exist_ok = True)
 
 def get_hacky_inclusion_chunks(text, func_name):
   parts = text.split(func_name + '(\'')
@@ -345,9 +350,12 @@ def generate_modules_b64(templates):
 
 STRING_TYPE = type('')
 def export_lookup_to_dir(files, dir):
+  
   for file in files:
     content = files[file]
     full_path = dir + '/' + file
+    parent_path = file_get_parent(full_path)
+    ensure_directory_exists(parent_path)
     if type(content) == STRING_TYPE:
       file_write_text(full_path, hacky_perform_image_b64_inclusion(content))
     else:
