@@ -362,12 +362,25 @@ def export_lookup_to_dir(files, dir):
       raise Exception() # TODO: image export when the time comes
 
 def main(args):
-  generate_basic_templates()
-  templates = list_files_recursively('gen/templates')
-  templates_lookup = {}
-  for path in templates:
-    templates_lookup[path] = file_read_text('gen/templates/' + path)
-  generate_modules_b64(templates_lookup)
+  if len(args) != 1:
+    print("Usage: python build.py action")
+    print("Actions:")
+    print("  templates - fills gen/templates with basic files.")
+    print("  mod64 - builds test files that are separated into granular modules and has embedded base64 images") 
+    return 
+  
+  arg = args[0]
+  if arg == 'templates':
+    generate_basic_templates()
+  else:
+    templates = list_files_recursively('gen/templates')
+    templates_lookup = {}
+    for path in templates:
+      templates_lookup[path] = file_read_text('gen/templates/' + path)
+    if arg == 'mod64':
+      generate_modules_b64(templates_lookup)
+    else:
+      print("Unrecognized argument or not implemented yet: " + arg)
 
 if __name__ == '__main__':
   main(sys.argv[1:])
