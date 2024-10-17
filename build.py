@@ -147,12 +147,14 @@ def generate_html_host():
   loaders = '''
     PlexiOS.registerJavaScriptLoader('app', id => PlexiOS.Util.loadScript('./tools/' + id.split('.').pop() + '.js'));
     PlexiOS.registerJavaScriptLoader('component', id => PlexiOS.Util.loadScript('./components/' + id.split('.').pop() + '.js'));
+    PlexiOS.registerJavaScriptLoader('image', id => PlexiOS.Util.loadScript('./images/' + id + '.js'));
   '''
 
   files_dir = '.'
   config = {
     'headless': False,
     'useDefaultFullScreenShell': True,
+    'images': ['plexiscriptapps'],
   }
 
   scripts = list(map(lambda path: '<script src="' + path + '"></script>\n', scripts))

@@ -17,16 +17,42 @@ let createExecutionEngine = os => {
   };
 
   let launchPlexiScript = async (byteCode, procInfo, args) => {
-    await Promise.all([
+    let [_, newPlexiRt] = await Promise.all([
       HtmlUtil.loadComponent('CommonScript_0_1_0'),
       HtmlUtil.loadComponent('PlexiScript_0_1_0'),
     ]);
-    let plexiRt = os.getPlexiScriptRuntime(0, 1, 0);
-    await plexiRt.start(procInfo, args);
+    let plexiRt = newPlexiRt(os);
+    if (typeof(byteCode) === 'string') {
+      byteCode = Util.base64ToBytes(byteCode);
+    }
+    return getPlexiScriptBlockingPromise(plexiRt, byteCode, args, procInfo);
+  };
+
+  let getPlexiScriptBlockingPromise = async (plexiRt, byteCode, args, procInfo) => {
+    let resolver;
+    let p = new Promise(res => { resolver = res; });
+    Util.pause(0).then(async () => {    
+      let rtCtx = plexiRt.createRuntimeContext(byteCode, [...args], { procInfo, resolver });
+      let mainTask = rtCtx.getMainTask();
+      runPlexiTask(mainTask, resolver);
+    });
+    return p;
+  };
+
+  let runPlexiTask = async (task, resolver) => {
+    let result = task.resume();
+    while (true) {
+      if (result.isSuccess()) return resolver(true);
+      if (result.isError()) return resolver(false);
+      if (result.isSuspend()) return null;
+      if (result.isTimedSleep()) {
+        await Util.pause(result.getSleepAmountMillis() / 1000);
+        result = task.resume();
+      } 
+    }
   };
 
   let launchFileNonBlocking = (path, optArgs, optCwd, optPipes) => {
-
     let pipes = { ...defaultPipes, ...(optPipes || {}) };
     let env = os.EnvVars.snapshot();
     let cwd = optCwd || '/';

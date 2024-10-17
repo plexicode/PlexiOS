@@ -132,7 +132,20 @@ let getFsHelper = (fs, wrapPath) => {
     let data = await fs.read(path);
     if (!data || data.isDir) return { isValid: false };
     let kc = data.keyedContent;
-    if (!kc.vjs && !kc.plexidata) return { isValid: false };
+    if (!kc.vjs && !kc.plexidata) {
+      let { ok, text } = await fileReadText(path);
+      // TODO: This will obviously be updated to be more robust. Right?
+      if (ok && text.startsWith("UF")) {
+        let icon = await fileGetDirectCanvasFromData(data, 'ico');
+        return {
+          isPlx: true,
+          isValid: true,
+          icon,
+          byteCode: text,
+        };
+      }
+      return { isValid: false };
+    }
     let { vjs } = kc;
     let icon = await fileGetDirectCanvasFromData(data, 'ico');
     vjs = vjs ? Util.tryParseJson(vjs) : null;
