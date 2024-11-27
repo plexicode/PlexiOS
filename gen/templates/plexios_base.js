@@ -1304,7 +1304,10 @@ let createExecutionEngine = os => {
     let result = task.resume();
     while (true) {
       if (result.isSuccess()) return resolver(true);
-      if (result.isError()) return resolver(false);
+      if (result.isError()) {
+        console.error(result.getError()[0]);
+        return resolver(false);
+      }
       if (result.isSuspend()) return null;
       if (result.isTimedSleep()) {
         await Util.pause(result.getSleepAmountMillis() / 1000);
