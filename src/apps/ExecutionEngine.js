@@ -31,8 +31,9 @@ let createExecutionEngine = os => {
   let getPlexiScriptBlockingPromise = async (plexiRt, byteCode, args, procInfo) => {
     let resolver;
     let p = new Promise(res => { resolver = res; });
-    Util.pause(0).then(async () => {    
-      let rtCtx = plexiRt.createRuntimeContext(byteCode, [...args], { procInfo, resolver });
+    Util.pause(0).then(async () => {
+      let pid = await procInfo.pid;
+      let rtCtx = plexiRt.createRuntimeContext(byteCode, [...args], { procInfo: { ...procInfo, pid }, resolver });
       let mainTask = rtCtx.getMainTask();
       runPlexiTask(mainTask, resolver);
     });
@@ -51,7 +52,7 @@ let createExecutionEngine = os => {
       if (result.isTimedSleep()) {
         await Util.pause(result.getSleepAmountMillis() / 1000);
         result = task.resume();
-      } 
+      }
     }
   };
 
