@@ -11,7 +11,6 @@ const APP_MAIN = async (os, procInfo, args) => {
     destroyProcessUponClose: true,
     onClosed: () => onClose(true),
     onInit: (contentHost) => {
-      let locSpan = (...args) => LOC(...[os, ...args]);
       let content = div({
         fullSize: true,
         backgroundColor: '#fff',
@@ -19,26 +18,26 @@ const APP_MAIN = async (os, procInfo, args) => {
       });
 
       let panels = [
-        { title: locSpan('HEADER_ACCOUNT') },
-        { id: 'ACCT_NAME', option: locSpan('ACCT_NAME_AND_IMAGE'), builder: buildAccountAppearance },
-        { id: 'ACCT_PASS', option: locSpan('ACCT_PASS_SEC'), builder: buildAccountSecurity },
-        { title: locSpan('HEADER_PROGRAMS') },
-        { id: 'PROG_INSTALLED', option: locSpan('PROG_INSTALLED'), builder: buildProgramsInstalled },
-        { id: 'FILE_TYPES', option: locSpan('PROG_FILE_TYPES'), builder: buildFileTypes },
-        { id: 'PROG_DEV', option: locSpan('PROG_DEV_SETTINGS'), builder: buildProgramsDevSettings },
-        { title: locSpan('HEADER_APPEARANCE') },
-        { id: 'BACKGROUND', option: locSpan('VIS_BACKGROUND'), builder: buildAppearanceBackground },
-        { id: 'SCREENSAVER', option: locSpan('VIS_SCREENSAVER'), builder: buildAppearanceScreensaver },
-        { id: 'THEME', option: locSpan('VIS_THEME'), builder: buildAppearanceTheme },
-        { id: 'TASKBAR', option: locSpan('VIS_TASKBAR'), builder: buildAppearanceTaskbar },
-        { id: 'EFFECTS', option: locSpan('VIS_EFFECTS'), builder: buildAppearanceEffects },
-        { title: locSpan('HEADER_LANG_REG') },
-        { id: 'LANG', option: locSpan('LANG'), builder: buildLanguage },
-        { id: 'DATETIME', option: locSpan('DATE_TIME'), builder: buildClockSettings },
-        { title: locSpan('HEADER_SYSTEM') },
-        { id: 'ENV_VARS', option: locSpan('SYS_ENV_VAR'), builder: buildEnvVar },
-        { id: 'DISK_EXPORT', option: locSpan('SYS_DISK_EXPORT'), builder: buildExportDisk },
-        // { id: 'PERMISSIONS', option: locSpan('SYS_PERMISSIONS'), builder: buildPermissions },
+        { title: span("Account") },
+        { id: 'ACCT_NAME', option: span("Account Name & Image"), builder: buildAccountAppearance },
+        { id: 'ACCT_PASS', option: span("Password & Security"), builder: buildAccountSecurity },
+        { title: span("Programs") },
+        { id: 'PROG_INSTALLED', option: span("Installed"), builder: buildProgramsInstalled },
+        { id: 'FILE_TYPES', option: span("File Types"), builder: buildFileTypes },
+        { id: 'PROG_DEV', option: span("Developer Settings"), builder: buildProgramsDevSettings },
+        { title: span("Appearance") },
+        { id: 'BACKGROUND', option: span("Background"), builder: buildAppearanceBackground },
+        { id: 'SCREENSAVER', option: span("Screensaver"), builder: buildAppearanceScreensaver },
+        { id: 'THEME', option: span("Theme"), builder: buildAppearanceTheme },
+        { id: 'TASKBAR', option: span("Taskbar"), builder: buildAppearanceTaskbar },
+        { id: 'EFFECTS', option: span("Visual Effects"), builder: buildAppearanceEffects },
+        { title: span("Language & Region") },
+        { id: 'LANG', option: span("Language"), builder: buildLanguage },
+        { id: 'DATETIME', option: span("Date & Time"), builder: buildClockSettings },
+        { title: span("System Settings") },
+        { id: 'ENV_VARS', option: span("Environment Variables"), builder: buildEnvVar },
+        { id: 'DISK_EXPORT', option: span("Export Disk"), builder: buildExportDisk },
+        // { id: 'PERMISSIONS', option: span("Permissions"), builder: buildPermissions },
       ];
 
       let loadPanel = async id => {
