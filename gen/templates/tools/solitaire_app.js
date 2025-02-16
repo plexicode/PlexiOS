@@ -7,69 +7,6 @@ const APP_RAW_IMAGE_DATA = await Util.loadImageB64Lookup({
 
 const TITLE = "Solitaire";
 const APP_ID = 'io.plexi.apps.solitaire';
-let deckPickerWindow = async (os, pid, game) => {
-  let { GameCards, ItemList } = await HtmlUtil.loadComponents('GameCards', 'ItemList');
-  cards = GameCards();
-  let { div, button } = HtmlUtil;
-  let settings = os.AppSettings.getScope(APP_ID);
-  let defaultSelectedId = await settings.getString('cardStyle');
-  let deckIds = cards.getChoices();
-  let choices = deckIds.map(id => {
-    return {
-      id,
-      image: cards.getBackSample(id),
-      name: cards.getDeckName(id),
-    }
-  });
-
-  await os.Shell.showWindow(pid, {
-    title: TITLE,
-    innerWidth: 400,
-    innerHeight: 300,
-    onInit: (contentHost, winData) => {
-      let selectedId = defaultSelectedId || choices[0].id;
-
-      let refresh = () => {
-        let current = choices.filter(t => t.id === selectedId)[0];
-        if (current) {
-          imgHost.clear().set(Util.copyImage(current.image));
-        }
-      };
-
-      let imgHost = div({ height: 150, padding: 25 });
-      let root = div({ fullSize: true, backgroundColor: '#080' },
-        div({ westDock: 200, },
-          div({ position: 'absolute', left: 10, top: 10, bottom: 10, right: 0 },
-            ItemList({
-              backgroundColor: '#fff',
-              fullSize: true,
-              getItems: () => choices,
-              getId: item => item.id,
-              renderItem: item => div(item.name),
-              selectedId,
-              onSelectionChanged: (id) => {
-                selectedId = id;
-                refresh();
-              },
-            })
-          ),
-        ),
-        div({ eastStretchDock: 200, textAlign: 'center' },
-          div(imgHost),
-          button("Pick This Deck", async () => {
-            settings.setString('cardStyle', selectedId);
-            game.cardImages = await cards.generateImages(selectedId);
-            renderGame(game);
-            winData.closeHandler();
-          }),
-        ),
-      );
-      contentHost.set(root);
-
-      refresh();
-    },
-  });
-};
 let createDeck = (cardImages) => {
   let cards = [];
   let faceLookup = ' A23456789XJQK';
@@ -495,148 +432,68 @@ let createGame = async (os, pid, w, h, isActive) => {
 
   return game;
 };
-const APP_MAIN = async (os, procInfo, args) => {
-  const { div } = HtmlUtil;
-  const { pid } = procInfo;
-
-  await HtmlUtil.loadComponent('GameCards');
-
-  let onClose = null;
-  let promise = new Promise(res => { onClose = res; });
-
-  let gameWidth = 600;
-  let gameHeight = 480;
-  let windowWidth = gameWidth;
-  let windowHeight = gameHeight;
-
-  let reset = async () => {
-    // use old width and height
-    game = await createGame(os, pid, game.width, game.height, isGameActive);
-    game.reset = reset;
-    game.windowWidth = windowWidth;
-    game.windowHeight = windowHeight;
-    renderGame(game);
-    contentDiv.clear().set(game.canvas.set({ width: '100%', height: '100%' }));
-
-    // Lol, iOS Safari
-    let r = contentDiv.getBoundingClientRect();
-    onResize(Math.floor(r.width), Math.floor(r.height));
-  };
-
-  let isGameActive = g => {
-    return g === game && !!os.ProcessManager.getProcess(pid);
-  };
-
-  let game = await createGame(os, pid, gameWidth, gameHeight, isGameActive);
-  game.reset = reset;
-
-  let {
-    createCommand, createMenu, createMenuItem, createMenuSep, MENU_CTRL_CMD, MENU_CTRL, MENU_SHIFT, MENU_ALT
-  } = os.Shell.MenuBuilder;
-  let getMenu = (idChain) => {
-    switch (idChain.join('|')) {
-      case '':
-        return createMenu(
-          createMenuItem('game', '_Game'),
-          createMenuItem('help', '_Help'),
-        );
-      case 'game':
-        return createMenu(
-          createMenuItem('new', '_New Game').withShortcut('F2'),
-          createMenuItem('card', '_Pick Card Style').withShortcut('F3'),
-          // createMenuItem('undo', '_Undo Last Move').withShortcut(MENU_CTRL_CMD, 'Z'),
-          createMenuSep(),
-          // createMenuItem('solve', '_Solve'),
-          createMenuSep(),
-          createMenuItem('exit', 'E_xit').withShortcut(MENU_CTRL_CMD, 'W'),
-        );
-      case 'help':
-        return createMenu(
-          createMenuItem('how', '_How to Play'),
-          createMenuSep(),
-          createMenuItem('about', '_About'),
-        );
-
-      case 'game|new': return createCommand(() => game.reset());
-      case 'game|card': return createCommand(() => deckPickerWindow(os, pid, game));
-      case 'game|undo': return createCommand(() => console.log("TODO: undo"));
-      case 'game|exit': return createCommand(() => closeMe());
-      case 'help|how': return createCommand(() => console.log("TODO: how to play"));
-      case 'help|about': return createCommand(() => console.log("TODO: About"));
-
-      case 'game|solve': return createCommand(() => {
-        let allPiles = Util.flattenArray([game.piles, game.acePiles, game.drawn, game.undrawn, game.floating.cards]);
-        game.piles = Util.range(7).map(_ => []);
-        game.drawn = [];
-        game.undrawn = [];
-        for (let i = 0; i < 4; i++) {
-          game.acePiles[i] = [];
-          for (let j = 0; j < 13; j++) {
-            let card = allPiles.pop();
-            card.faceUp = true;
-            game.acePiles[i].push(card);
-          }
-        }
-        game.checkVictory();
-        renderGame(game);
-      });
-
-      default:
-        throw new Error("Not implemented: " + idChain.join(" -> "));
+let deckPickerWindow = async (os, pid, game) => {
+  let { GameCards, ItemList } = await HtmlUtil.loadComponents('GameCards', 'ItemList');
+  cards = GameCards();
+  let { div, button } = HtmlUtil;
+  let settings = os.AppSettings.getScope(APP_ID);
+  let defaultSelectedId = await settings.getString('cardStyle');
+  let deckIds = cards.getChoices();
+  let choices = deckIds.map(id => {
+    return {
+      id,
+      image: cards.getBackSample(id),
+      name: cards.getDeckName(id),
     }
-  };
+  });
 
-  let contentDiv = null;
-
-  let closeMe = Util.noop;
-
-  let winDataRef = null;
-
-  let onResize = (w, h) => {
-    windowWidth = w;
-    windowHeight = h;
-    game.windowWidth = w;
-    game.windowHeight = h;
-    renderGame(game);
-  };
-
-  os.Shell.showWindow(pid, {
+  await os.Shell.showWindow(pid, {
     title: TITLE,
-    menuBuilder: getMenu,
-    innerWidth: gameWidth,
-    innerHeight: gameHeight,
-    destroyProcessUponClose: true,
-    onResize: (w, h) => onResize(w, h),
-    onClosed: () => onClose(true),
+    innerWidth: 400,
+    innerHeight: 300,
     onInit: (contentHost, winData) => {
-      winDataRef = winData;
+      let selectedId = defaultSelectedId || choices[0].id;
 
-      winData.shortcutKeyRouter
-        .addKey('F2', () => game.reset())
-        .addKey('F3', () => deckPickerWindow(os, pid, game))
-        .addKey('CTRL+Z', () => console.log("TODO: undo"));
+      let refresh = () => {
+        let current = choices.filter(t => t.id === selectedId)[0];
+        if (current) {
+          imgHost.clear().set(Util.copyImage(current.image));
+        }
+      };
 
-      closeMe = winData.closeHandler;
+      let imgHost = div({ height: 150, padding: 25 });
+      let root = div({ fullSize: true, backgroundColor: '#080' },
+        div({ westDock: 200, },
+          div({ position: 'absolute', left: 10, top: 10, bottom: 10, right: 0 },
+            ItemList({
+              backgroundColor: '#fff',
+              fullSize: true,
+              getItems: () => choices,
+              getId: item => item.id,
+              renderItem: item => div(item.name),
+              selectedId,
+              onSelectionChanged: (id) => {
+                selectedId = id;
+                refresh();
+              },
+            })
+          ),
+        ),
+        div({ eastStretchDock: 200, textAlign: 'center' },
+          div(imgHost),
+          button("Pick This Deck", async () => {
+            settings.setString('cardStyle', selectedId);
+            game.cardImages = await cards.generateImages(selectedId);
+            renderGame(game);
+            winData.closeHandler();
+          }),
+        ),
+      );
+      contentHost.set(root);
 
-      renderGame(game);
-
-      contentDiv = div({
-        fullSize: true,
-        backgroundColor: '#888',
-        color: '#fff',
-        overflow: 'hidden',
-      }, game.canvas);
-
-      contentHost.append(contentDiv);
-    },
-    onShown: () => {
-      let { width, height } = winDataRef.contentHost.getBoundingClientRect();
-      game.windowWidth = width;
-      game.windowHeight = height;
-      renderGame(game);
+      refresh();
     },
   });
-  return promise;
 };
 const MIN_MARGIN = 8;
 const OVERLAP_STACK_HEIGHT = 8;
@@ -965,6 +822,149 @@ let createCanvas = (game, w, h) => {
       onDrag(drag[0], drag[1], x, y);
     }
   });
+};
+const APP_MAIN = async (os, procInfo, args) => {
+  const { div } = HtmlUtil;
+  const { pid } = procInfo;
+
+  await HtmlUtil.loadComponent('GameCards');
+
+  let onClose = null;
+  let promise = new Promise(res => { onClose = res; });
+
+  let gameWidth = 600;
+  let gameHeight = 480;
+  let windowWidth = gameWidth;
+  let windowHeight = gameHeight;
+
+  let reset = async () => {
+    // use old width and height
+    game = await createGame(os, pid, game.width, game.height, isGameActive);
+    game.reset = reset;
+    game.windowWidth = windowWidth;
+    game.windowHeight = windowHeight;
+    renderGame(game);
+    contentDiv.clear().set(game.canvas.set({ width: '100%', height: '100%' }));
+
+    // Lol, iOS Safari
+    let r = contentDiv.getBoundingClientRect();
+    onResize(Math.floor(r.width), Math.floor(r.height));
+  };
+
+  let isGameActive = g => {
+    return g === game && !!os.ProcessManager.getProcess(pid);
+  };
+
+  let game = await createGame(os, pid, gameWidth, gameHeight, isGameActive);
+  game.reset = reset;
+
+  let {
+    createCommand, createMenu, createMenuItem, createMenuSep, MENU_CTRL_CMD, MENU_CTRL, MENU_SHIFT, MENU_ALT
+  } = os.Shell.MenuBuilder;
+  let getMenu = (idChain) => {
+    switch (idChain.join('|')) {
+      case '':
+        return createMenu(
+          createMenuItem('game', '_Game'),
+          createMenuItem('help', '_Help'),
+        );
+      case 'game':
+        return createMenu(
+          createMenuItem('new', '_New Game').withShortcut('F2'),
+          createMenuItem('card', '_Pick Card Style').withShortcut('F3'),
+          // createMenuItem('undo', '_Undo Last Move').withShortcut(MENU_CTRL_CMD, 'Z'),
+          createMenuSep(),
+          // createMenuItem('solve', '_Solve'),
+          createMenuSep(),
+          createMenuItem('exit', 'E_xit').withShortcut(MENU_CTRL_CMD, 'W'),
+        );
+      case 'help':
+        return createMenu(
+          createMenuItem('how', '_How to Play'),
+          createMenuSep(),
+          createMenuItem('about', '_About'),
+        );
+
+      case 'game|new': return createCommand(() => game.reset());
+      case 'game|card': return createCommand(() => deckPickerWindow(os, pid, game));
+      case 'game|undo': return createCommand(() => console.log("TODO: undo"));
+      case 'game|exit': return createCommand(() => closeMe());
+      case 'help|how': return createCommand(() => console.log("TODO: how to play"));
+      case 'help|about': return createCommand(() => console.log("TODO: About"));
+
+      case 'game|solve': return createCommand(() => {
+        let allPiles = Util.flattenArray([game.piles, game.acePiles, game.drawn, game.undrawn, game.floating.cards]);
+        game.piles = Util.range(7).map(_ => []);
+        game.drawn = [];
+        game.undrawn = [];
+        for (let i = 0; i < 4; i++) {
+          game.acePiles[i] = [];
+          for (let j = 0; j < 13; j++) {
+            let card = allPiles.pop();
+            card.faceUp = true;
+            game.acePiles[i].push(card);
+          }
+        }
+        game.checkVictory();
+        renderGame(game);
+      });
+
+      default:
+        throw new Error("Not implemented: " + idChain.join(" -> "));
+    }
+  };
+
+  let contentDiv = null;
+
+  let closeMe = Util.noop;
+
+  let winDataRef = null;
+
+  let onResize = (w, h) => {
+    windowWidth = w;
+    windowHeight = h;
+    game.windowWidth = w;
+    game.windowHeight = h;
+    renderGame(game);
+  };
+
+  os.Shell.showWindow(pid, {
+    title: TITLE,
+    menuBuilder: getMenu,
+    innerWidth: gameWidth,
+    innerHeight: gameHeight,
+    destroyProcessUponClose: true,
+    onResize: (w, h) => onResize(w, h),
+    onClosed: () => onClose(true),
+    onInit: (contentHost, winData) => {
+      winDataRef = winData;
+
+      winData.shortcutKeyRouter
+        .addKey('F2', () => game.reset())
+        .addKey('F3', () => deckPickerWindow(os, pid, game))
+        .addKey('CTRL+Z', () => console.log("TODO: undo"));
+
+      closeMe = winData.closeHandler;
+
+      renderGame(game);
+
+      contentDiv = div({
+        fullSize: true,
+        backgroundColor: '#888',
+        color: '#fff',
+        overflow: 'hidden',
+      }, game.canvas);
+
+      contentHost.append(contentDiv);
+    },
+    onShown: () => {
+      let { width, height } = winDataRef.contentHost.getBoundingClientRect();
+      game.windowWidth = width;
+      game.windowHeight = height;
+      renderGame(game);
+    },
+  });
+  return promise;
 };
 PlexiOS.registerJavaScript('app', 'io.plexi.tools.solitaire', APP_MAIN);
 })();

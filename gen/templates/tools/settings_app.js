@@ -5,27 +5,281 @@ const APP_RAW_IMAGE_DATA = await Util.loadImageB64Lookup({
   'icon.png': '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',
 });
 
-let buildAccountAppearance = async os => {
+let buildLanguage = async os => {
+
+  let langs = os.Localization.getLocaleList();
+
+  let langPicker = ItemList({
+    margin: 8,
+    border: '1px solid #888',
+    height: 140,
+    getItems: () => {
+      return langs;
+    },
+    getId: item => item.id,
+    renderItem: item => {
+      return div(span({ bold: true }, item.id.toUpperCase()), ": ", span({ color: '#555' }, item.name));
+    },
+    selectedId: os.Localization.getLanguage(),
+    onSelectionChanged: langId => {
+      os.Localization.setLanguage(langId);
+    },
+  });
+
   return createDetailsPanel(
-    "Basic Account Settings",
+    "Language",
     [
-      createSettingBox("Not applicable", [
-        div("You are currently running " + os.getName() + " anonymously. There is no account to customize."),
+      createSettingBox(
+        "System Language",
+        //langPicker,
+        div("Localization is not ready yet. Please check back later."),
+        true, true)
+    ]
+  );
+};
+
+let buildClockSettings = async os => {
+
+  return createDetailsPanel(
+    "Date & Time",
+    [
+      createSettingBox("Not implemented.", [
+        div("This feature is not implemented yet. However, if you are trying to change the appearance of the clock, this is located in Taskbar settings."),
+      ], true, true),
+    ]
+  );
+};
+let buildEnvVar = async (os, pid) => {
+
+  let envList = ItemList({
+    height: 180,
+    border: '1px solid #888',
+    getId: item => item.id,
+    renderItem: item => {
+      return div(
+        { width: '100%', textOverflow: 'ellipsis' },
+        span({ bold: true }, item.id), ': ',
+        span({ opacity: 0.5 }, item.value),
+      )
+    },
+    getItems: async () => {
+      return os.EnvVars.list().map(id => {
+        return { id, value: os.EnvVars.getRaw(id) };
+      })
+    },
+    onSelectionChanged: () => {
+      updateButtons();
+    },
+  });
+
+  let updateButtons = () => {
+    let hasSelection = !!envList.getSelectedId();
+    editButton.set({ enabled: hasSelection });
+    deleteButton.set({ enabled: hasSelection });
+  };
+
+  let showCycleWarning = () => os.Shell.DialogFactory.showOkCancelToBool(
+    pid,
+    "Error",
+    "This value cannot be set as it creates a variable cycle. Please ensure that environment variables do not refer to each other cyclically.");
+
+  let editEnvVar = async () => {
+    let id = envList.getSelectedId();
+    if (!id) return;
+    let value = os.EnvVars.getRaw(id);
+    let result = await os.Shell.DialogFactory.showOkCancelToBool(pid, "Edit Environment Variable", div(
+      div("Variable Name: ", span({ bold: true }, id)),
+      div(
+        "Value: ",
+        inputText(
+          { value },
+          newValue => { value = newValue; },
+        )
+      ),
+    ));
+
+    if (result) {
+      if (!os.EnvVars.set(id, value)) {
+        await showCycleWarning();
+      }
+      envList.refreshItems(true);
+      updateButtons();
+    }
+  };
+
+  let deleteEnvVar = async () => {
+    let id = envList.getSelectedId();
+    let result = await os.Shell.DialogFactory.showYesNoToBool(
+      pid,
+      "Delete Environment Variable",
+      div(
+        div("Are you sure you want to delete the following environment variable? This may cause system instability."),
+        div({ textAlign: 'center', bold: true }, id),
+      )
+    );
+
+    if (result) {
+      os.EnvVars.remove(id);
+      envList.refreshItems(true);
+      updateButtons();
+    }
+  };
+
+  let newEnvVar = async (defaultName, defaultValue) => {
+    let name = defaultName || '';
+    let value = defaultValue || '';
+    let tryAgain = false;
+    let result = await os.Shell.DialogFactory.showOkCancelToBool(pid, "New Environment Variable", div(
+      div("Create new environment variable:"),
+      div("Name: ", inputText({ value: name }, v => { name = v; })),
+      div("Value: ", inputText({ value: value }, v => { value = v; })),
+    ));
+    if (result) {
+      if (os.EnvVars.getRaw(name)) {
+        let collisionResult = await os.Shell.DialogFactory.showOkCancelToBool(pid, "Variable collision", "An environment variable already exists with that name.");
+        if (!collisionResult) return;
+        tryAgain = true;
+      } else {
+        if (!os.EnvVars.set(name, value)) {
+          await showCycleWarning();
+          tryAgain = true;
+        }
+      }
+    }
+
+    if (tryAgain) {
+      return newEnvVar(name, value);
+    }
+
+    envList.refreshItems(true);
+    updateButtons();
+  };
+
+  let editButton = button("Edit...", { enabled: false }, editEnvVar);
+  let deleteButton = button("Delete...", { enabled: false }, deleteEnvVar);
+
+  return createDetailsPanel(
+    "Environment Variables",
+    [
+      createSettingBox(
+        "Edit Existing Variables",
+        [
+          envList,
+          div(
+            { marginTop: 8 },
+            editButton, ' ',
+            deleteButton,
+          )
+        ],
+        true, false),
+      createSettingBox(
+        "Create New Variable",
+        [
+          button("New...", () => newEnvVar()),
+        ],
+        false, true),
+    ]);
+};
+
+let buildExportDisk = async os => {
+
+  return createDetailsPanel(
+    "Export Disk",
+    [
+      createSettingBox("Not implemented.", [
+        div("This feature is not implemented yet. Please check back later."),
       ], true, true),
     ]
   );
 };
 
-let buildAccountSecurity = async os => {
+let buildPermissions = async os => {
 
   return createDetailsPanel(
-    "Account Password & Security",
+    "Permissions",
     [
-      createSettingBox("Not applicable", [
-        div("You are currently running " + os.getName() + " anonymously. There is no account to customize."),
+      createSettingBox("Not implemented.", [
+        div("This feature is not implemented yet. Please check back later."),
       ], true, true),
     ]
   );
+};
+const APP_MAIN = async (os, procInfo, args) => {
+  const { pid } = procInfo;
+
+  let onClose = null;
+  let promise = new Promise(res => { onClose = res; });
+
+  os.Shell.showWindow(pid, {
+    title: os.getName() + " Settings",
+    width: 600,
+    height: 400,
+    destroyProcessUponClose: true,
+    onClosed: () => onClose(true),
+    onInit: (contentHost) => {
+      let content = div({
+        fullSize: true,
+        backgroundColor: '#fff',
+        color: '#000',
+      });
+
+      let panels = [
+        { title: span("Account") },
+        { id: 'ACCT_NAME', option: span("Account Name & Image"), builder: buildAccountAppearance },
+        { id: 'ACCT_PASS', option: span("Password & Security"), builder: buildAccountSecurity },
+        { title: span("Programs") },
+        { id: 'PROG_INSTALLED', option: span("Installed"), builder: buildProgramsInstalled },
+        { id: 'FILE_TYPES', option: span("File Types"), builder: buildFileTypes },
+        { id: 'PROG_DEV', option: span("Developer Settings"), builder: buildProgramsDevSettings },
+        { title: span("Appearance") },
+        { id: 'BACKGROUND', option: span("Background"), builder: buildAppearanceBackground },
+        { id: 'SCREENSAVER', option: span("Screensaver"), builder: buildAppearanceScreensaver },
+        { id: 'THEME', option: span("Theme"), builder: buildAppearanceTheme },
+        { id: 'TASKBAR', option: span("Taskbar"), builder: buildAppearanceTaskbar },
+        { id: 'EFFECTS', option: span("Visual Effects"), builder: buildAppearanceEffects },
+        { title: span("Language & Region") },
+        { id: 'LANG', option: span("Language"), builder: buildLanguage },
+        { id: 'DATETIME', option: span("Date & Time"), builder: buildClockSettings },
+        { title: span("System Settings") },
+        { id: 'ENV_VARS', option: span("Environment Variables"), builder: buildEnvVar },
+        { id: 'DISK_EXPORT', option: span("Export Disk"), builder: buildExportDisk },
+        // { id: 'PERMISSIONS', option: span("Permissions"), builder: buildPermissions },
+      ];
+
+      let loadPanel = async id => {
+        let builder = (panels.filter(p => p.id === id)[0] || {}).builder || (() => div('not implemented'));
+        let panel = await Promise.resolve(builder(os, pid));
+        page.clear().set(panel);
+      };
+
+      let nav = div(
+        {
+          westDock: 200,
+          overflowX: 'hidden',
+          overflowY: 'auto',
+          backgroundColor: BG_COLOR,
+        }, panels.map(item => {
+          let cell = div(
+            { marginBottom: '1px', padding: '8px' }
+          );
+          if (item.title) {
+            cell.set({ bold: true, backgroundColor: '#fff' }, item.title);
+          } else {
+            cell.set({ cursor: 'pointer' }, item.option);
+            cell.addEventListener('mouseover', () => cell.set({ backgroundColor: 'rgba(255, 255, 255, 0.7)' }));
+            cell.addEventListener('mouseout', () => cell.set({ backgroundColor: '' }));
+            cell.addEventListener('click', () => loadPanel(item.id));
+          }
+          return cell;
+        }));
+      let page = div({ eastStretchDock: 200 });
+      content.set(nav, page);
+      contentHost.append(content);
+
+      if (args[0]) loadPanel(args[0]);
+    },
+  });
+  return promise;
 };
 let buildAppearanceBackground = async os => {
 
@@ -438,6 +692,28 @@ let buildAppearanceEffects = async os => {
     ]
   );
 };
+let buildAccountAppearance = async os => {
+  return createDetailsPanel(
+    "Basic Account Settings",
+    [
+      createSettingBox("Not applicable", [
+        div("You are currently running " + os.getName() + " anonymously. There is no account to customize."),
+      ], true, true),
+    ]
+  );
+};
+
+let buildAccountSecurity = async os => {
+
+  return createDetailsPanel(
+    "Account Password & Security",
+    [
+      createSettingBox("Not applicable", [
+        div("You are currently running " + os.getName() + " anonymously. There is no account to customize."),
+      ], true, true),
+    ]
+  );
+};
 const TITLE = "Settings";
 const BG_COLOR = 'rgb(230, 236, 242)';
 const { button, div, inputCheckbox, inputText, span } = HtmlUtil;
@@ -484,128 +760,6 @@ let createSettingBox = (title, interior, isTop, isBottom) => {
 
     div({ bold: true, marginBottom: 3, }, title),
     div({ color: '#555' }, interior),
-  );
-};
-const APP_MAIN = async (os, procInfo, args) => {
-  const { pid } = procInfo;
-
-  let onClose = null;
-  let promise = new Promise(res => { onClose = res; });
-
-  os.Shell.showWindow(pid, {
-    title: os.getName() + " Settings",
-    width: 600,
-    height: 400,
-    destroyProcessUponClose: true,
-    onClosed: () => onClose(true),
-    onInit: (contentHost) => {
-      let locSpan = (...args) => LOC(...[os, ...args]);
-      let content = div({
-        fullSize: true,
-        backgroundColor: '#fff',
-        color: '#000',
-      });
-
-      let panels = [
-        { title: locSpan('HEADER_ACCOUNT') },
-        { id: 'ACCT_NAME', option: locSpan('ACCT_NAME_AND_IMAGE'), builder: buildAccountAppearance },
-        { id: 'ACCT_PASS', option: locSpan('ACCT_PASS_SEC'), builder: buildAccountSecurity },
-        { title: locSpan('HEADER_PROGRAMS') },
-        { id: 'PROG_INSTALLED', option: locSpan('PROG_INSTALLED'), builder: buildProgramsInstalled },
-        { id: 'FILE_TYPES', option: locSpan('PROG_FILE_TYPES'), builder: buildFileTypes },
-        { id: 'PROG_DEV', option: locSpan('PROG_DEV_SETTINGS'), builder: buildProgramsDevSettings },
-        { title: locSpan('HEADER_APPEARANCE') },
-        { id: 'BACKGROUND', option: locSpan('VIS_BACKGROUND'), builder: buildAppearanceBackground },
-        { id: 'SCREENSAVER', option: locSpan('VIS_SCREENSAVER'), builder: buildAppearanceScreensaver },
-        { id: 'THEME', option: locSpan('VIS_THEME'), builder: buildAppearanceTheme },
-        { id: 'TASKBAR', option: locSpan('VIS_TASKBAR'), builder: buildAppearanceTaskbar },
-        { id: 'EFFECTS', option: locSpan('VIS_EFFECTS'), builder: buildAppearanceEffects },
-        { title: locSpan('HEADER_LANG_REG') },
-        { id: 'LANG', option: locSpan('LANG'), builder: buildLanguage },
-        { id: 'DATETIME', option: locSpan('DATE_TIME'), builder: buildClockSettings },
-        { title: locSpan('HEADER_SYSTEM') },
-        { id: 'ENV_VARS', option: locSpan('SYS_ENV_VAR'), builder: buildEnvVar },
-        { id: 'DISK_EXPORT', option: locSpan('SYS_DISK_EXPORT'), builder: buildExportDisk },
-        // { id: 'PERMISSIONS', option: locSpan('SYS_PERMISSIONS'), builder: buildPermissions },
-      ];
-
-      let loadPanel = async id => {
-        let builder = (panels.filter(p => p.id === id)[0] || {}).builder || (() => div('not implemented'));
-        let panel = await Promise.resolve(builder(os, pid));
-        page.clear().set(panel);
-      };
-
-      let nav = div(
-        {
-          westDock: 200,
-          overflowX: 'hidden',
-          overflowY: 'auto',
-          backgroundColor: BG_COLOR,
-        }, panels.map(item => {
-          let cell = div(
-            { marginBottom: '1px', padding: '8px' }
-          );
-          if (item.title) {
-            cell.set({ bold: true, backgroundColor: '#fff' }, item.title);
-          } else {
-            cell.set({ cursor: 'pointer' }, item.option);
-            cell.addEventListener('mouseover', () => cell.set({ backgroundColor: 'rgba(255, 255, 255, 0.7)' }));
-            cell.addEventListener('mouseout', () => cell.set({ backgroundColor: '' }));
-            cell.addEventListener('click', () => loadPanel(item.id));
-          }
-          return cell;
-        }));
-      let page = div({ eastStretchDock: 200 });
-      content.set(nav, page);
-      contentHost.append(content);
-
-      if (args[0]) loadPanel(args[0]);
-    },
-  });
-  return promise;
-};
-let buildLanguage = async os => {
-
-  let langs = os.Localization.getLocaleList();
-
-  let langPicker = ItemList({
-    margin: 8,
-    border: '1px solid #888',
-    height: 140,
-    getItems: () => {
-      return langs;
-    },
-    getId: item => item.id,
-    renderItem: item => {
-      return div(span({ bold: true }, item.id.toUpperCase()), ": ", span({ color: '#555' }, item.name));
-    },
-    selectedId: os.Localization.getLanguage(),
-    onSelectionChanged: langId => {
-      os.Localization.setLanguage(langId);
-    },
-  });
-
-  return createDetailsPanel(
-    "Language",
-    [
-      createSettingBox(
-        "System Language",
-        //langPicker,
-        div("Localization is not ready yet. Please check back later."),
-        true, true)
-    ]
-  );
-};
-
-let buildClockSettings = async os => {
-
-  return createDetailsPanel(
-    "Date & Time",
-    [
-      createSettingBox("Not implemented.", [
-        div("This feature is not implemented yet. However, if you are trying to change the appearance of the clock, this is located in Taskbar settings."),
-      ], true, true),
-    ]
   );
 };
 let buildProgramsInstalled = async (os, pid) => {
@@ -877,161 +1031,6 @@ let buildProgramsDevSettings = async os => {
           ' ',
           "Enable execution of programs that aren't installed to the app registry."
         ),
-      ], true, true),
-    ]
-  );
-};
-let buildEnvVar = async (os, pid) => {
-
-  let envList = ItemList({
-    height: 180,
-    border: '1px solid #888',
-    getId: item => item.id,
-    renderItem: item => {
-      return div(
-        { width: '100%', textOverflow: 'ellipsis' },
-        span({ bold: true }, item.id), ': ',
-        span({ opacity: 0.5 }, item.value),
-      )
-    },
-    getItems: async () => {
-      return os.EnvVars.list().map(id => {
-        return { id, value: os.EnvVars.getRaw(id) };
-      })
-    },
-    onSelectionChanged: () => {
-      updateButtons();
-    },
-  });
-
-  let updateButtons = () => {
-    let hasSelection = !!envList.getSelectedId();
-    editButton.set({ enabled: hasSelection });
-    deleteButton.set({ enabled: hasSelection });
-  };
-
-  let showCycleWarning = () => os.Shell.DialogFactory.showOkCancelToBool(
-    pid,
-    "Error",
-    "This value cannot be set as it creates a variable cycle. Please ensure that environment variables do not refer to each other cyclically.");
-
-  let editEnvVar = async () => {
-    let id = envList.getSelectedId();
-    if (!id) return;
-    let value = os.EnvVars.getRaw(id);
-    let result = await os.Shell.DialogFactory.showOkCancelToBool(pid, "Edit Environment Variable", div(
-      div("Variable Name: ", span({ bold: true }, id)),
-      div(
-        "Value: ",
-        inputText(
-          { value },
-          newValue => { value = newValue; },
-        )
-      ),
-    ));
-
-    if (result) {
-      if (!os.EnvVars.set(id, value)) {
-        await showCycleWarning();
-      }
-      envList.refreshItems(true);
-      updateButtons();
-    }
-  };
-
-  let deleteEnvVar = async () => {
-    let id = envList.getSelectedId();
-    let result = await os.Shell.DialogFactory.showYesNoToBool(
-      pid,
-      "Delete Environment Variable",
-      div(
-        div("Are you sure you want to delete the following environment variable? This may cause system instability."),
-        div({ textAlign: 'center', bold: true }, id),
-      )
-    );
-
-    if (result) {
-      os.EnvVars.remove(id);
-      envList.refreshItems(true);
-      updateButtons();
-    }
-  };
-
-  let newEnvVar = async (defaultName, defaultValue) => {
-    let name = defaultName || '';
-    let value = defaultValue || '';
-    let tryAgain = false;
-    let result = await os.Shell.DialogFactory.showOkCancelToBool(pid, "New Environment Variable", div(
-      div("Create new environment variable:"),
-      div("Name: ", inputText({ value: name }, v => { name = v; })),
-      div("Value: ", inputText({ value: value }, v => { value = v; })),
-    ));
-    if (result) {
-      if (os.EnvVars.getRaw(name)) {
-        let collisionResult = await os.Shell.DialogFactory.showOkCancelToBool(pid, "Variable collision", "An environment variable already exists with that name.");
-        if (!collisionResult) return;
-        tryAgain = true;
-      } else {
-        if (!os.EnvVars.set(name, value)) {
-          await showCycleWarning();
-          tryAgain = true;
-        }
-      }
-    }
-
-    if (tryAgain) {
-      return newEnvVar(name, value);
-    }
-
-    envList.refreshItems(true);
-    updateButtons();
-  };
-
-  let editButton = button("Edit...", { enabled: false }, editEnvVar);
-  let deleteButton = button("Delete...", { enabled: false }, deleteEnvVar);
-
-  return createDetailsPanel(
-    "Environment Variables",
-    [
-      createSettingBox(
-        "Edit Existing Variables",
-        [
-          envList,
-          div(
-            { marginTop: 8 },
-            editButton, ' ',
-            deleteButton,
-          )
-        ],
-        true, false),
-      createSettingBox(
-        "Create New Variable",
-        [
-          button("New...", () => newEnvVar()),
-        ],
-        false, true),
-    ]);
-};
-
-let buildExportDisk = async os => {
-
-  return createDetailsPanel(
-    "Export Disk",
-    [
-      createSettingBox("Not implemented.", [
-        div("This feature is not implemented yet. Please check back later."),
-      ], true, true),
-    ]
-  );
-};
-
-let buildPermissions = async os => {
-
-  return createDetailsPanel(
-    "Permissions",
-    [
-      createSettingBox("Not implemented.", [
-        div("This feature is not implemented yet. Please check back later."),
       ], true, true),
     ]
   );
