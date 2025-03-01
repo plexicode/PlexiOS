@@ -77,6 +77,7 @@ const APP_MAIN = async (os, procInfo, args) => {
     onTextUpdated(e.key, cmd);
   };
   let fakeInput;
+  let mainDiv;
 
   os.Shell.showWindow(procInfo.pid, {
     title: "Terminal",
@@ -84,7 +85,7 @@ const APP_MAIN = async (os, procInfo, args) => {
     height: 300,
     onKey,
     destroyProcessUponClose: true,
-    onFocused: () => fakeInput.focus(),
+    onFocusing: () => fakeInput.focus(),
     onInit: (contentHost) => {
       let top = div(os.getName() + " v0.1 Terminal");
       let lines = div();
@@ -103,7 +104,7 @@ const APP_MAIN = async (os, procInfo, args) => {
         scrollBottom();
       };
 
-      let scrollBottom = () => { main.scrollTop = main.scrollHeight; };
+      let scrollBottom = () => { mainDiv.scrollTop = mainDiv.scrollHeight; };
 
       let insertLine = (text, color) => {
         lines.append(div(text, { color }));
@@ -112,7 +113,7 @@ const APP_MAIN = async (os, procInfo, args) => {
       session.out(line => { insertLine(line, '#fff'); });
       session.err(line => { insertLine(line, '#f00'); });
 
-      let main = div(
+      mainDiv = div(
         {
           fullSize: true,
           wordBreak: 'break-all',
@@ -126,9 +127,18 @@ const APP_MAIN = async (os, procInfo, args) => {
         },
         top,
         lines,
-        div({ position: 'absolute', left: 0, bottom: 0 }, fakeInput),
         bottomHost,
       );
+
+      let outer = div(
+        {
+          fullSize: true,
+          backgroundColor: '#0f0',
+        },
+        div({ position: 'absolute', left: 0, bottom: 0 }, fakeInput),
+        mainDiv,
+      );
+
       resetBottom();
       onTextUpdated = async (text, special) => {
         let refresh = false;
@@ -220,11 +230,11 @@ const APP_MAIN = async (os, procInfo, args) => {
         }
       };
 
-      main.addEventListener('pointerdown', () => {
+      mainDiv.addEventListener('pointerdown', () => {
         fakeInput.focus();
       });
 
-      contentHost.append(main);
+      contentHost.append(outer);
     },
   });
 

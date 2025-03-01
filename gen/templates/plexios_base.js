@@ -4931,6 +4931,8 @@ const createPlexiShell = (os) => {
   let giveWindowFocus = (winData) => {
     if (!winData || focusedWindow === winData || !isWindowInList(winData)) return;
 
+    winData.onFocusing();
+
     focusedWindow = winData;
     winData.zPriority = getTopZPriority();
 
@@ -5052,7 +5054,8 @@ const createPlexiShell = (os) => {
         }
       },
       focus: () => giveWindowFocus(winData),
-      onFocused: () => { if (options.onFocused) options.onFocused() },
+      onFocused: () => { if (options.onFocused) options.onFocused(); },
+      onFocusing: () => { if (options.onFocusing) options.onFocusing(); },
       themeDataCache: {},
       isMaximized: false,
       transform: {
