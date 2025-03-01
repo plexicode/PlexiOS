@@ -32,8 +32,7 @@ let createExecutionEngine = os => {
     let resolver;
     let p = new Promise(res => { resolver = res; });
     Util.pause(0).then(async () => {
-      let pid = await procInfo.pid;
-      let rtCtx = plexiRt.createRuntimeContext(byteCode, [...args], { procInfo: { ...procInfo, pid }, resolver });
+      let rtCtx = plexiRt.createRuntimeContext(byteCode, [...args], { procInfo, resolver });
       let mainTask = rtCtx.getMainTask();
       runPlexiTask(mainTask, resolver);
     });
@@ -73,10 +72,10 @@ let createExecutionEngine = os => {
       let { isValid, isPlx, isJs } = execInfo;
       if (!isValid) throw new Error("not an executable file");
 
-      // TOO: allocProcess also reads the icon using execInfo. You should
+      // TODO: allocProcess also reads the icon using execInfo. You should
       // pass it in with the icon information already fetched here.
 
-      pid = os.ProcessManager.allocProc(path, '~' + path);
+      pid = await os.ProcessManager.allocProc(path, '~' + path);
       let procInfo = { pid, cwd, env, ...pipes };
 
       let appPromise;
