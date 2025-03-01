@@ -10,6 +10,11 @@ const APP_MAIN = async (os, procInfo, args) => {
   let onClose = null;
   let promise = new Promise(res => { onClose = res; });
   let startingDir = args.length ? args[0] : '/';
+
+  // convert to absolute path as this app uses a root-scoped filesystem accessor
+  let scopedFs = os.FileSystem(procInfo.cwd);
+  startingDir = scopedFs.getParent(scopedFs.join(startingDir, 'dummy'));
+
   await initToolbarIcons(os);
   os.Shell.showWindow(pid, {
     title: 'Files',
@@ -28,6 +33,9 @@ const TOOLBAR_HEIGHT = 40;
 let main = (os, dir, pid) => {
   const { div } = HtmlUtil;
   const { DividerPane, FileList, IconBrowser } = HtmlUtil.Components;
+
+
+  console.log(dir);
 
   let iconsDir = dir;
   let navDir = dir;
