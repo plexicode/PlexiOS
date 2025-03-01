@@ -65,7 +65,6 @@ let createActions = (os, procInfo, titleSetter, tryCloseWin) => {
         os.Shell.DialogFactory.showPathDoesNotExist(pid, TITLE, targetFile);
         return;
       }
-      console.log(result);
       actions.clearDirty();
       filePath = targetFile;
       actions.invalidateTitle();
