@@ -4,7 +4,8 @@ const APP_MAIN = async (os, procInfo, args) => {
 
   let projFile = args[0];
   if (!projFile || typeof projFile !== 'string') {
-    throw new Error("TODO: Usage info should be in Pastel layer");
+    await procInfo.stdout.writeln(PlexiScript.getUsageNotes().trimEnd());
+    return;
   }
   if (!projFile.toLowerCase().endsWith('.json')) {
     throw new Error("TODO: Error for when the project file is not a .json file.");
