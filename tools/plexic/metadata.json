@@ -1,0 +1,7 @@
+{
+  "id": "io.plexi.tools.plexic",
+  "name": "Plexi Compile",
+  "ui": false,
+  "author": "Plexi",
+  "description": "Compile Plexi Script programs"
+}

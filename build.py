@@ -29,6 +29,7 @@ APP_IDS = (
   'minesweeper',
   'notepad',
   'openwith',
+  'plexic',
   'proclist',
   'screensaver',
   'settings',
