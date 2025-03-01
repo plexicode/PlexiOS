@@ -2,11 +2,9 @@ const APP_MAIN = async (os, procInfo, args) => {
   const { pid } = procInfo;
   let onClose = null;
   let promise = new Promise(res => { onClose = res; });
-  let startingDir = args.length ? args[0] : '/';
 
-  // convert to absolute path as this app uses a root-scoped filesystem accessor
   let scopedFs = os.FileSystem(procInfo.cwd);
-  startingDir = scopedFs.getParent(scopedFs.join(startingDir, 'dummy'));
+  let startingDir = scopedFs.getAbsolutePath(args.length ? args[0] : '/');
 
   await initToolbarIcons(os);
   os.Shell.showWindow(pid, {

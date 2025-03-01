@@ -42,7 +42,7 @@ const APP_MAIN = async (os, procInfo, args) => {
   if (!dstPath || typeof dstPath !== 'string') {
     return failWithError("Project file contains an invalid value for dstPath");
   }
-  dstPath = fs.getParent(fs.join(dstPath, 'dummy')); // canonicalize
+  dstPath = fs.getAbsolutePath(dstPath);
 
   for (let moduleInfo of data.modules) {
     let { name, source } = moduleInfo;
@@ -56,7 +56,7 @@ const APP_MAIN = async (os, procInfo, args) => {
     if (srcByModule[name]) {
       return failWithError("The project file contains multiple definitions for the module '" + name + "'.");
     }
-    let moduleDir = fs.getParent(fs.join(projectDir, source, 'dummypath')); // add extra path and go to parent to canonicalize path
+    let moduleDir = fs.getAbsolutePath(fs.join(projectDir, source));
     let files = {};
     let fileList = await fs.listRecursive(moduleDir, { useStructs: true });
     for (let file of fileList.filter(f => f.relative.toLowerCase().endsWith('.px'))) {
