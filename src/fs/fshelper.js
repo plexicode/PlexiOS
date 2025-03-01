@@ -24,12 +24,16 @@ let getFsHelper = (fs, wrapPath) => {
     }
     return { ok: true, text: data.content };
   };
+  let NOT_JSON = { ok: false, error: 'NON_JSON_FILE' };
   let fileReadJson = async (path) => {
     let txt = await fileReadText(path);
-    if (!txt.ok) return { ok: false, error: 'PATH_NOT_FOUND' };
+    if (!txt.ok) {
+      if (txt.error === 'NON_TEXT_FILE') return NOT_JSON;
+      return { ok: false, error: 'PATH_NOT_FOUND' };
+    }
     let data = Util.tryParseJson(txt.text);
     if (data) return { ok: true, data };
-    return { ok: false, error: 'NON_JSON_FILE' };
+    return NOT_JSON;
   };
   let fileWriteText = async (path, text) => {
     let ok = await fs.write(wrapPath(path), text + '');
