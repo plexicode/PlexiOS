@@ -10,10 +10,18 @@ let getFsHelper = (fs, wrapPath) => {
     }
     return true;
   };
+  let isEmptyFile = data => {
+    if (!data || data.isDir) return false;
+    let isEmptyFile = !data.content && data.size === 0 && !data.keyedContent.type;
+    return !!isEmptyFile;
+  };
   let fileReadText = async (path) => {
     let data = await fs.read(wrapPath(path), false);
     if (!data) return { ok: false, error: 'PATH_NOT_FOUND' };
-    if (!isText(data)) return { ok: false, error: 'NON_TEXT_FILE' };
+    if (!isText(data)) {
+      if (isEmptyFile(data)) return { ok: true, text: '' };
+      return { ok: false, error: 'NON_TEXT_FILE' };
+    }
     return { ok: true, text: data.content };
   };
   let fileReadJson = async (path) => {
