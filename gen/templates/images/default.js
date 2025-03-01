@@ -34,6 +34,7 @@ PlexiOS.registerJavaScript('image', 'default', async (imgUtil) => {
     'fileprops': ["File Properties", PLEXI_IMAGE_B64('tools/fileprops/icon.png')],
     'files': ["File Browser", PLEXI_IMAGE_B64('tools/files/icon.png'), true, true],
     'openwith': ["Open with...", PLEXI_IMAGE_B64('tools/openwith/icon.png')],
+    'plexic': ["Plexi Compile", PLEXI_IMAGE_B64('tools/files/icon.png')],
     'proclist': ["Process List", PLEXI_IMAGE_B64('tools/proclist/icon.png')],
     'screensaver': ["Screensaver", PLEXI_IMAGE_B64('tools/screensaver/icon.png')],
     'settings': ["Settings", PLEXI_IMAGE_B64('tools/settings/icon.png'), true],
