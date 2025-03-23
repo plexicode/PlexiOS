@@ -19,6 +19,7 @@ REQUIRED_COMPONENTS = (
   'FileList',
   'IconBrowser',
   'DividerPane',
+  'FileContextMenu',
 )
 
 APP_IDS = (
@@ -353,7 +354,7 @@ def generate_modules_b64(templates):
 
 STRING_TYPE = type('')
 def export_lookup_to_dir(files, dir):
-  
+
   for file in files:
     content = files[file]
     full_path = dir + '/' + file
@@ -369,9 +370,9 @@ def main(args):
     print("Usage: python build.py action")
     print("Actions:")
     print("  templates - fills gen/templates with basic files.")
-    print("  mod64 - builds test files that are separated into granular modules and has embedded base64 images") 
-    return 
-  
+    print("  mod64 - builds test files that are separated into granular modules and has embedded base64 images")
+    return
+
   arg = args[0]
   if arg == 'templates':
     generate_basic_templates()
