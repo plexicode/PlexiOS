@@ -143,56 +143,38 @@ PlexiOS.registerJavaScript('image', 'default', async (imgUtil) => {
   let initializeFileAssociations = async () => {
 
     // TODO: do not build this unless the file is missing.
-    let systemToolEditable = [
-      'TXT:T:Text File',
-      'JSON:T:JSON File',
-      'XML:T:XML File',
-      'PX:T:Plexi Source Code',
-      'PNG:I:PNG Image',
-      'JPG:I:JPEG Image',
-      'BMP:I:Bitmap Image',
-      'GIF:I:GIF Image',
-
-      // TODO: implement soundplay
-      /*'MP3:A:MP3 Audio',
-      'OGG:A:Ogg Vorbis Audio',
-      'WAV:A:PCM Wave Sound',
-      'MID:A:MIDI Song',*/
-
-      // TODO: implement videoplay
-      /*'AVI:V:AVI Video',
-      'MPG:V:MPEG Video',*/
+    let initialConfig = [
+      'SCR:/system/tools/screensaver:Screensaver',
+      'THEME:/system/tools/themeloader:Theme',
+      'TXT:[T]:Text File',
+      'JSON:[T]:JSON File',
+      'XML:[T]:XML File',
+      'PX:[T]:Plexi Source Code',
+      'PNG:[I]:PNG Image',
+      'JPG:[I]:JPEG Image',
+      'BMP:[I]:Bitmap Image',
+      'GIF:[I]:GIF Image',
+      // TODO: implement video/sound player app as [A] and [V] or just a general media player.
+      // 'MP3:[A]:MP3 Audio',
+      // 'OGG:[A]:Ogg Vorbis Audio',
+      // 'WAV:[A]:PCM Wave Sound',
+      // 'MID:[A]:MIDI Song',
+      // 'AVI:[V]:AVI Video',
+      // 'MPG:[V]:MPEG Video',
     ];
-
-    let assoc = [
-      { ext: 'SCR', app: '/system/tools/screensaver', name: "Screensaver" },
-      { ext: 'THEME', app: '/system/tools/themeloader', name: "Theme" },
-      ...systemToolEditable.map(t => {
-        let [ext, fmt, name] = t.split(':');
-        let app = '/system/tools/' + ({
-          T: 'notepad',
-          I: 'imageviewer',
-          // A: 'soundplay',
-          // V: 'videoplay',
-        })[fmt];
+    let entries = initialConfig
+      .join('\n')
+      .replaceAll('[T]', '/system/tools/notepad')
+      .replaceAll('[I]', '/system/tools/imageviewer')
+      .split('\n')
+      .map(t => {
+        let [ext, app, name] = t.split(':');
         return { ext, app, name };
-      })
-    ];
-    let prefix = [];
-    let suffix = [];
-    appFileExtInfo.filter(a => a.fileExt).forEach(app => {
-      let { primary, secondary } = app.fileExt;
+      });
 
-      (primary || []).forEach(ext => {
-        prefix.push({ ext, name: ext + ' File', app: '/apps/' + app.id });
-      });
-      (secondary || []).forEach(ext => {
-        suffix.push({ ext, name: ext + ' File', app: '/apps/' + app.id });
-      });
-    });
-    let entries = [...prefix, ...assoc, ...suffix ];
-    data = { entries };
-    await imgUtil.makeTextFile('/home/config/file-ext-apps.json', JSON.stringify(data));
+    await imgUtil.makeTextFile(
+      '/home/config/file-ext-apps.json',
+      JSON.stringify({ entries }));
   };
 
   await initializeEnvironmentVariables();
