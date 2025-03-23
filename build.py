@@ -156,7 +156,7 @@ def generate_html_host():
   config = {
     'headless': False,
     'useDefaultFullScreenShell': True,
-    'images': ['plexiscriptapps'],
+    'images': ['devbasic', 'plexiscriptapps'],
   }
 
   scripts = list(map(lambda path: '<script src="' + path + '"></script>\n', scripts))
