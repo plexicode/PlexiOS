@@ -1,5 +1,6 @@
 const createImageUtil = (os) => {
   let fs = os.FsRoot;
+  let toInt = val => parseInt(val + '');
   let imgUtil = {
     setSetting: async (k, v) => {
       os.Settings.preInitSet(k, v);
@@ -30,6 +31,25 @@ const createImageUtil = (os) => {
     makeCanvasBasedImageFile: async (path, canvas) => {
       await fs.mkdirs(fs.getParent(path));
       await fs.fileWriteImageCanvas(path, canvas);
+    },
+    drawImageFile: async (path, instr) => {
+      // super hacky but good for creating simple test images
+      let c = document.createElement('canvas');
+      let g = null;
+      for (let line of instr.split('|')) {
+        let row = line.trim().split(',');
+        let a = row.map(toInt);
+        switch (row[0]) {
+          case 'W': c.width = a[1]; break;
+          case 'H': c.height = a[1]; break;
+          case 'R':
+            g = g || c.getContext('2d');
+            g.fillStyle = 'rgb(' + a[5] + ',' + a[6] + ',' + a[7] + ')';
+            g.fillRect(a[1], a[2], a[3], a[4]);
+            break;
+        }
+      }
+      return imgUtil.makeCanvasBasedImageFile(path, c);
     },
     makeUrlBasedImageFile: async (path, url, optMetadata) => {
       if (await fs.fileExists(path)) return;
