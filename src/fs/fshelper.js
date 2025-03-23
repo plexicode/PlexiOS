@@ -250,7 +250,24 @@ let getFsHelper = (fs, wrapPath) => {
     if (optMetadata) kd.metadata = JSON.stringify(optMetadata);
     await fs.write(wrapPath(path), '', kd);
   };
+  let fileReadBinaryForced = async (path, optUpdateInternalIfUrl) => {
+    let data = await fileReadBinaryOrUrl(path);
+    if (!data.ok) return data;
+
+    if (data.ok && data.type === 'url') {
+      let arrBuf = await fetch(data.url).then(res => res.arrayBuffer());
+      // TODO: use optUpdateInternalIfUrl to cache the bytes into the file itself.
+      return { ok: true, bytes: new Uint8Array(arrBuf), type: 'binary', metadata: data.metadata };
+    }
+    return data;
+  };
+  let fileWriteBinary = async (path, bytes) => {
+    if (!isByteArray(bytes)) throw new Error('INVALID_FILE_PAYLOAD');
+    throw new Error('NOT_IMPLEMENTED');
+  };
   let binaryData = {
+    fileReadBinaryForced,
+    fileWriteBinary,
     fileReadBinaryOrUrl,
     fileWriteBinaryByUrl,
   };
