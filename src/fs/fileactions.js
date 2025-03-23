@@ -9,63 +9,9 @@ let createFileActionRegistry = (osGetter, fs) => {
 
   let getRawJson = async () => {
     let { ok, data } = await fs.fileReadJson(CONFIG_FILE);
-    if (!ok) {
-      let os = osGetter();
-      let appFileExtInfo = [
-        // TODO: rebuild this list. This used to come from an HTTP request to the old PlexiStore.
-      ];
-
-      let systemToolEditable = [
-        // TODO: implement textedit
-        /*'TXT:T:Text File',
-        'JSON:T:JSON File',
-        'XML:T:XML File',
-        'CRY:T:Crayon Source Code',
-        'BUILD:T:Build File',*/
-
-        // TODO: implement imageshow
-        /*'PNG:I:PNG Image',
-        'JPG:I:JPEG Image',
-        'BMP:I:Bitmap Image',
-        'GIF:I:GIF Image',*/
-
-        // TODO: implement soundplay
-        /*'MP3:A:MP3 Audio',
-        'OGG:A:Ogg Vorbis Audio',
-        'WAV:A:PCM Wave Sound',
-        'MID:A:MIDI Song',*/
-
-        // TODO: implement videoplay
-        /*'AVI:V:AVI Video',
-        'MPG:V:MPEG Video',*/
-      ];
-
-      let assoc = [
-        { ext: 'SCR', app: '/system/tools/screensaver', name: "Screensaver" },
-        { ext: 'THEME', app: '/system/tools/themeloader', name: "Theme" },
-        ...systemToolEditable.map(t => {
-          let [ext, fmt, name] = t.split(':');
-          let app = '/system/tools/' + ({ T: 'textedit', I: 'imageshow', A: 'soundplay', V: 'videoplay' })[fmt];
-          return { ext, app, name };
-        })
-      ];
-      let prefix = [];
-      let suffix = [];
-      appFileExtInfo.filter(a => a.fileExt).forEach(app => {
-        let { primary, secondary } = app.fileExt;
-
-        (primary || []).forEach(ext => {
-          prefix.push({ ext, name: ext + ' File', app: '/apps/' + app.id });
-        });
-        (secondary || []).forEach(ext => {
-          suffix.push({ ext, name: ext + ' File', app: '/apps/' + app.id });
-        });
-      });
-      let entries = [...prefix, ...assoc, ...suffix ];
-      data = { entries };
-      await fs.fileWriteText(CONFIG_FILE, JSON.stringify(data));
-    }
-    return { entries: Util.ensureArray(Util.ensureObject(data).entries).map(Util.ensureObject) };
+    return ok
+      ? { entries: Util.ensureArray(Util.ensureObject(data).entries).map(Util.ensureObject) }
+      : { entries: [] };
   };
 
   // Given a file extension and an application, promote the entry in the action list
