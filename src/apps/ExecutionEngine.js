@@ -16,23 +16,24 @@ let createExecutionEngine = os => {
     await Promise.resolve(runnerFn(os, procInfo, args));
   };
 
-  let launchPlexiScript = async (byteCode, procInfo, args) => {
+  let launchPlexiScript = async (bundleBytes, procInfo, args) => {
     let [_, newPlexiRt] = await Promise.all([
       HtmlUtil.loadComponent('CommonScript_0_1_0'),
       HtmlUtil.loadComponent('PlexiScript_0_1_0'),
     ]);
     let plexiRt = newPlexiRt(os);
-    if (typeof(byteCode) === 'string') {
-      byteCode = Util.base64ToBytes(byteCode);
+    if (typeof(bundleBytes) === 'string') {
+      bundleBytes = Util.base64ToBytes(bundleBytes);
     }
-    return getPlexiScriptBlockingPromise(plexiRt, byteCode, args, procInfo);
+    return getPlexiScriptBlockingPromise(plexiRt, bundleBytes, args, procInfo);
   };
 
-  let getPlexiScriptBlockingPromise = async (plexiRt, byteCode, args, procInfo) => {
+  let getPlexiScriptBlockingPromise = async (plexiRt, bundleBytes, args, procInfo) => {
     let resolver;
     let p = new Promise(res => { resolver = res; });
     Util.pause(0).then(async () => {
-      let rtCtx = plexiRt.createRuntimeContext(byteCode, [...args], { procInfo, resolver });
+      let bundleInfo = plexiRt.parseBundleBytes(bundleBytes);
+      let rtCtx = plexiRt.createRuntimeContext(bundleInfo.byteCode, [...args], { procInfo, resolver });
       let mainTask = rtCtx.getMainTask();
       runPlexiTask(mainTask, resolver);
     });

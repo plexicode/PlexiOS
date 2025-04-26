@@ -140,49 +140,76 @@ let getFsHelper = (fs, wrapPath) => {
     if (iconB64) kd.ico = Util.base64ToBytes(iconB64);
     await fs.write(wrapPath(path), '', kd);
   };
+
+  // TODO: this is being called in three ways:
+  // 1) Getting all the executable info
+  // 2) Checking to just see if it's a valid executable
+  // 3) Getting just the (possibly-cached) metadata
+  // This should be reflected in the invocation so as to not do too much heavy
+  // lifting per executable in, for example, a file browser window full of apps.
   let getExecInfo = async (path) => {
     let data = await fs.read(path);
     if (!data || data.isDir) return { isValid: false };
     let kc = data.keyedContent;
-    if (!kc.vjs && !kc.plexidata) {
-      let { ok, text } = await fileReadText(path);
-      // TODO: This will obviously be updated to be more robust. Right?
-      if (ok && text.startsWith("UF")) {
-        let icon = await fileGetDirectCanvasFromData(data, 'ico');
+
+    let { vjs } = kc;
+    if (vjs) {
+      let icon = await fileGetDirectCanvasFromData(data, 'ico');
+      vjs = vjs ? Util.tryParseJson(vjs) : null;
+      if (vjs) {
         return {
-          isPlx: true,
+          isJs: true,
+          isStore: vjs.category === 'appSt',
           isValid: true,
           icon,
-          byteCode: text,
+          appId: vjs.id,
+          name: kc.name,
         };
       }
-      return { isValid: false };
     }
-    let { vjs } = kc;
-    let icon = await fileGetDirectCanvasFromData(data, 'ico');
-    vjs = vjs ? Util.tryParseJson(vjs) : null;
-    if (vjs) {
-      return {
-        isJs: true,
-        isStore: vjs.category === 'appSt',
-        isValid: true,
-        icon,
-        appId: vjs.id,
-        name: kc.name,
-      };
+
+    let plexiScriptInfo = getPlexiScriptExecInfo(kc);
+    if (plexiScriptInfo) return plexiScriptInfo;
+
+    return { isValid: false };
+  };
+
+  const PLEXI_HEADER = [...'PLXSCR'.split('').map(v => v.charCodeAt(0)), 0, 255];
+  let getPlexiScriptExecInfo = kc => {
+
+    let bytes = kc[''];
+    if (!bytes || !(bytes instanceof Uint8Array) || bytes.length < 20) return null;
+    for (let i = 0; i < PLEXI_HEADER.length; i++) {
+      if (PLEXI_HEADER[i] !== bytes[i]) return null;
     }
-    if (kc.plexidata) {
-      let plexiData = Util.tryParseJson(kc.plexidata);
-      if (!plexiData) return { isValid: false };
-      return {
-        isPlx: true,
-        isValid: true,
-        icon,
-        blockId: plexiData.PLXID,
-        blockInfo: plexiData,
-        name: "Untitled Plexi App",
-      };
+
+    let id = kc.id || null;
+    let name = kc.title || null;
+    let icon = kc.icon || null;
+
+    if (icon) {
+      if (typeof icon === 'string') throw new Error('TODO: convert base64 to canvas');
+      else if (typeof icon === 'object') {
+        if (Array.isArray(icon)) throw new Error('TODO: convert byte array into canvas');
+        else if (icon instanceof Uint8Array) throw new Error('TODO: convert bytes to canvas');
+        else if (icon instanceof HTMLCanvasElement) {} // good to go
+        else throw new Error('TODO: handle this type of icon format' );
+      } else {
+        throw new Error('TODO: handle this type of icon format');
+      }
     }
+
+    // TODO: parse out things from bytecode if not included in keyed content
+    // and possibly cache them back into keyed content to allow faster loading next time.
+
+    return {
+      isPlx: true,
+      isValid: true,
+      icon,
+      appId: id,
+      byteCode: bytes,
+      name: `${name || ''}` || "Untitled Application",
+    };
   };
 
   let virtualJs = {
@@ -239,9 +266,18 @@ let getFsHelper = (fs, wrapPath) => {
         metadata: metadata ? Util.tryParseJson(metadata) : null
       };
     }
-    if (isByteArray(data.content)) return data.content;
+    if (isByteArray(data.content)) {
+      return { ok: true, type: 'binary', bytes: data.content, metadata };
+    }
+    if (data.keyedContent && data.keyedContent.b64) {
+      return { ok: true, type: 'binary', bytes: Util.base64ToBytes(data.keyedContent.b64), metadata };
+    }
     if (typeof data.content === 'string') {
-      return Util.textToBytes(data.content);
+      return { ok: true, type: 'binary', bytes: Util.textToBytes(data.content), metadata };
+    }
+    if (isCanvas(data.cache[''])) {
+      let b64 = data.cache[''].toDataURL().split(',').pop();
+      return { ok: true, type: 'binary', bytes: Util.base64ToBytes(b64) };
     }
     return { ok: false, error: 'INVALID_FILE' };
   };
@@ -261,9 +297,11 @@ let getFsHelper = (fs, wrapPath) => {
     }
     return data;
   };
-  let fileWriteBinary = async (path, bytes) => {
+  let fileWriteBinary = async (path, bytes, keyedData) => {
     if (!isByteArray(bytes)) throw new Error('INVALID_FILE_PAYLOAD');
-    throw new Error('NOT_IMPLEMENTED');
+    let ok = await fs.write(wrapPath(path), bytes, keyedData);
+    if (!ok) return { ok: 'PARENT_NOT_DIRECTORY' };
+    return { ok: true };
   };
   let binaryData = {
     fileReadBinaryForced,
