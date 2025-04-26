@@ -1116,6 +1116,7 @@ let getCanvasGraphics = (canvas, renderFrequently) => {
 
 const createImageUtil = (os) => {
   let fs = os.FsRoot;
+  let toInt = val => parseInt(val + '');
   let imgUtil = {
     setSetting: async (k, v) => {
       os.Settings.preInitSet(k, v);
@@ -1146,6 +1147,25 @@ const createImageUtil = (os) => {
     makeCanvasBasedImageFile: async (path, canvas) => {
       await fs.mkdirs(fs.getParent(path));
       await fs.fileWriteImageCanvas(path, canvas);
+    },
+    drawImageFile: async (path, instr) => {
+      // super hacky but good for creating simple test images
+      let c = document.createElement('canvas');
+      let g = null;
+      for (let line of instr.split('|')) {
+        let row = line.trim().split(',');
+        let a = row.map(toInt);
+        switch (row[0]) {
+          case 'W': c.width = a[1]; break;
+          case 'H': c.height = a[1]; break;
+          case 'R':
+            g = g || c.getContext('2d');
+            g.fillStyle = 'rgb(' + a[5] + ',' + a[6] + ',' + a[7] + ')';
+            g.fillRect(a[1], a[2], a[3], a[4]);
+            break;
+        }
+      }
+      return imgUtil.makeCanvasBasedImageFile(path, c);
     },
     makeUrlBasedImageFile: async (path, url, optMetadata) => {
       if (await fs.fileExists(path)) return;
@@ -1277,23 +1297,24 @@ let createExecutionEngine = os => {
     await Promise.resolve(runnerFn(os, procInfo, args));
   };
 
-  let launchPlexiScript = async (byteCode, procInfo, args) => {
+  let launchPlexiScript = async (bundleBytes, procInfo, args) => {
     let [_, newPlexiRt] = await Promise.all([
       HtmlUtil.loadComponent('CommonScript_0_1_0'),
       HtmlUtil.loadComponent('PlexiScript_0_1_0'),
     ]);
     let plexiRt = newPlexiRt(os);
-    if (typeof(byteCode) === 'string') {
-      byteCode = Util.base64ToBytes(byteCode);
+    if (typeof(bundleBytes) === 'string') {
+      bundleBytes = Util.base64ToBytes(bundleBytes);
     }
-    return getPlexiScriptBlockingPromise(plexiRt, byteCode, args, procInfo);
+    return getPlexiScriptBlockingPromise(plexiRt, bundleBytes, args, procInfo);
   };
 
-  let getPlexiScriptBlockingPromise = async (plexiRt, byteCode, args, procInfo) => {
+  let getPlexiScriptBlockingPromise = async (plexiRt, bundleBytes, args, procInfo) => {
     let resolver;
     let p = new Promise(res => { resolver = res; });
     Util.pause(0).then(async () => {
-      let rtCtx = plexiRt.createRuntimeContext(byteCode, [...args], { procInfo, resolver });
+      let bundleInfo = plexiRt.parseBundleBytes(bundleBytes);
+      let rtCtx = plexiRt.createRuntimeContext(bundleInfo.byteCode, [...args], { procInfo, resolver });
       let mainTask = rtCtx.getMainTask();
       runPlexiTask(mainTask, resolver);
     });
@@ -3061,63 +3082,9 @@ let createFileActionRegistry = (osGetter, fs) => {
 
   let getRawJson = async () => {
     let { ok, data } = await fs.fileReadJson(CONFIG_FILE);
-    if (!ok) {
-      let os = osGetter();
-      let appFileExtInfo = [
-        // TODO: rebuild this list. This used to come from an HTTP request to the old PlexiStore.
-      ];
-
-      let systemToolEditable = [
-        // TODO: implement textedit
-        /*'TXT:T:Text File',
-        'JSON:T:JSON File',
-        'XML:T:XML File',
-        'CRY:T:Crayon Source Code',
-        'BUILD:T:Build File',*/
-
-        // TODO: implement imageshow
-        /*'PNG:I:PNG Image',
-        'JPG:I:JPEG Image',
-        'BMP:I:Bitmap Image',
-        'GIF:I:GIF Image',*/
-
-        // TODO: implement soundplay
-        /*'MP3:A:MP3 Audio',
-        'OGG:A:Ogg Vorbis Audio',
-        'WAV:A:PCM Wave Sound',
-        'MID:A:MIDI Song',*/
-
-        // TODO: implement videoplay
-        /*'AVI:V:AVI Video',
-        'MPG:V:MPEG Video',*/
-      ];
-
-      let assoc = [
-        { ext: 'SCR', app: '/system/tools/screensaver', name: "Screensaver" },
-        { ext: 'THEME', app: '/system/tools/themeloader', name: "Theme" },
-        ...systemToolEditable.map(t => {
-          let [ext, fmt, name] = t.split(':');
-          let app = '/system/tools/' + ({ T: 'textedit', I: 'imageshow', A: 'soundplay', V: 'videoplay' })[fmt];
-          return { ext, app, name };
-        })
-      ];
-      let prefix = [];
-      let suffix = [];
-      appFileExtInfo.filter(a => a.fileExt).forEach(app => {
-        let { primary, secondary } = app.fileExt;
-
-        (primary || []).forEach(ext => {
-          prefix.push({ ext, name: ext + ' File', app: '/apps/' + app.id });
-        });
-        (secondary || []).forEach(ext => {
-          suffix.push({ ext, name: ext + ' File', app: '/apps/' + app.id });
-        });
-      });
-      let entries = [...prefix, ...assoc, ...suffix ];
-      data = { entries };
-      await fs.fileWriteText(CONFIG_FILE, JSON.stringify(data));
-    }
-    return { entries: Util.ensureArray(Util.ensureObject(data).entries).map(Util.ensureObject) };
+    return ok
+      ? { entries: Util.ensureArray(Util.ensureObject(data).entries).map(Util.ensureObject) }
+      : { entries: [] };
   };
 
   // Given a file extension and an application, promote the entry in the action list
@@ -3423,49 +3390,76 @@ let getFsHelper = (fs, wrapPath) => {
     if (iconB64) kd.ico = Util.base64ToBytes(iconB64);
     await fs.write(wrapPath(path), '', kd);
   };
+
+  // TODO: this is being called in three ways:
+  // 1) Getting all the executable info
+  // 2) Checking to just see if it's a valid executable
+  // 3) Getting just the (possibly-cached) metadata
+  // This should be reflected in the invocation so as to not do too much heavy
+  // lifting per executable in, for example, a file browser window full of apps.
   let getExecInfo = async (path) => {
     let data = await fs.read(path);
     if (!data || data.isDir) return { isValid: false };
     let kc = data.keyedContent;
-    if (!kc.vjs && !kc.plexidata) {
-      let { ok, text } = await fileReadText(path);
-      // TODO: This will obviously be updated to be more robust. Right?
-      if (ok && text.startsWith("UF")) {
-        let icon = await fileGetDirectCanvasFromData(data, 'ico');
+
+    let { vjs } = kc;
+    if (vjs) {
+      let icon = await fileGetDirectCanvasFromData(data, 'ico');
+      vjs = vjs ? Util.tryParseJson(vjs) : null;
+      if (vjs) {
         return {
-          isPlx: true,
+          isJs: true,
+          isStore: vjs.category === 'appSt',
           isValid: true,
           icon,
-          byteCode: text,
+          appId: vjs.id,
+          name: kc.name,
         };
       }
-      return { isValid: false };
     }
-    let { vjs } = kc;
-    let icon = await fileGetDirectCanvasFromData(data, 'ico');
-    vjs = vjs ? Util.tryParseJson(vjs) : null;
-    if (vjs) {
-      return {
-        isJs: true,
-        isStore: vjs.category === 'appSt',
-        isValid: true,
-        icon,
-        appId: vjs.id,
-        name: kc.name,
-      };
+
+    let plexiScriptInfo = getPlexiScriptExecInfo(kc);
+    if (plexiScriptInfo) return plexiScriptInfo;
+
+    return { isValid: false };
+  };
+
+  const PLEXI_HEADER = [...'PLXSCR'.split('').map(v => v.charCodeAt(0)), 0, 255];
+  let getPlexiScriptExecInfo = kc => {
+
+    let bytes = kc[''];
+    if (!bytes || !(bytes instanceof Uint8Array) || bytes.length < 20) return null;
+    for (let i = 0; i < PLEXI_HEADER.length; i++) {
+      if (PLEXI_HEADER[i] !== bytes[i]) return null;
     }
-    if (kc.plexidata) {
-      let plexiData = Util.tryParseJson(kc.plexidata);
-      if (!plexiData) return { isValid: false };
-      return {
-        isPlx: true,
-        isValid: true,
-        icon,
-        blockId: plexiData.PLXID,
-        blockInfo: plexiData,
-        name: "Untitled Plexi App",
-      };
+
+    let id = kc.id || null;
+    let name = kc.title || null;
+    let icon = kc.icon || null;
+
+    if (icon) {
+      if (typeof icon === 'string') throw new Error('TODO: convert base64 to canvas');
+      else if (typeof icon === 'object') {
+        if (Array.isArray(icon)) throw new Error('TODO: convert byte array into canvas');
+        else if (icon instanceof Uint8Array) throw new Error('TODO: convert bytes to canvas');
+        else if (icon instanceof HTMLCanvasElement) {} // good to go
+        else throw new Error('TODO: handle this type of icon format' );
+      } else {
+        throw new Error('TODO: handle this type of icon format');
+      }
     }
+
+    // TODO: parse out things from bytecode if not included in keyed content
+    // and possibly cache them back into keyed content to allow faster loading next time.
+
+    return {
+      isPlx: true,
+      isValid: true,
+      icon,
+      appId: id,
+      byteCode: bytes,
+      name: `${name || ''}` || "Untitled Application",
+    };
   };
 
   let virtualJs = {
@@ -3522,9 +3516,18 @@ let getFsHelper = (fs, wrapPath) => {
         metadata: metadata ? Util.tryParseJson(metadata) : null
       };
     }
-    if (isByteArray(data.content)) return data.content;
+    if (isByteArray(data.content)) {
+      return { ok: true, type: 'binary', bytes: data.content, metadata };
+    }
+    if (data.keyedContent && data.keyedContent.b64) {
+      return { ok: true, type: 'binary', bytes: Util.base64ToBytes(data.keyedContent.b64), metadata };
+    }
     if (typeof data.content === 'string') {
-      return Util.textToBytes(data.content);
+      return { ok: true, type: 'binary', bytes: Util.textToBytes(data.content), metadata };
+    }
+    if (isCanvas(data.cache[''])) {
+      let b64 = data.cache[''].toDataURL().split(',').pop();
+      return { ok: true, type: 'binary', bytes: Util.base64ToBytes(b64) };
     }
     return { ok: false, error: 'INVALID_FILE' };
   };
@@ -3533,7 +3536,26 @@ let getFsHelper = (fs, wrapPath) => {
     if (optMetadata) kd.metadata = JSON.stringify(optMetadata);
     await fs.write(wrapPath(path), '', kd);
   };
+  let fileReadBinaryForced = async (path, optUpdateInternalIfUrl) => {
+    let data = await fileReadBinaryOrUrl(path);
+    if (!data.ok) return data;
+
+    if (data.ok && data.type === 'url') {
+      let arrBuf = await fetch(data.url).then(res => res.arrayBuffer());
+      // TODO: use optUpdateInternalIfUrl to cache the bytes into the file itself.
+      return { ok: true, bytes: new Uint8Array(arrBuf), type: 'binary', metadata: data.metadata };
+    }
+    return data;
+  };
+  let fileWriteBinary = async (path, bytes, keyedData) => {
+    if (!isByteArray(bytes)) throw new Error('INVALID_FILE_PAYLOAD');
+    let ok = await fs.write(wrapPath(path), bytes, keyedData);
+    if (!ok) return { ok: 'PARENT_NOT_DIRECTORY' };
+    return { ok: true };
+  };
   let binaryData = {
+    fileReadBinaryForced,
+    fileWriteBinary,
     fileReadBinaryOrUrl,
     fileWriteBinaryByUrl,
   };
@@ -8846,6 +8868,260 @@ let PlexiOS = { Util, HtmlUtil, registerJavaScript };
     return outer;
   });
 })();
+
+PlexiOS.HtmlUtil.registerComponent('FileContextMenu', (os, absPathOrPaths, isDirInterior, options) => {
+
+  let { Util } = PlexiOS;
+  let { openOverride, refreshCb, pid } = Util.ensureObject(options);
+  refreshCb = refreshCb || Util.noop;
+
+  pid = pid || -1;
+
+  let absPaths = Util.flattenArray([absPathOrPaths]);
+  let absPath = absPaths.length === 1 ? absPaths[0] : null;
+  let isMulti = absPath === null;
+
+  let {
+    buildRootMenuElement,
+    createMenu,
+    createMenuItem,
+    createCommand,
+    createMenuSep,
+  } = os.Shell.MenuBuilder;
+
+  let fs = os.FsRoot;
+
+  let buildExtMenu = (idChain) => {
+    if (options.extendedOptionsBuilder) {
+      return options.extendedOptionsBuilder(idChain, absPaths, isDirInterior);
+    }
+    return null;
+
+  };
+
+  let fileContentCopiers = {
+    TEXT: async path => {
+      let d = await fs.fileReadText(path);
+      if (d.ok) os.Clipboard.copyText(d.text);
+    },
+    IMAGE: async path => {
+      let d = await fs.fileReadImage(path, true);
+      if (d.ok) os.Clipboard.copyImage(d.img)
+    },
+  };
+
+  let quickTypeDetermination = async (fs, absPath) => {
+    let name = absPath.split('/').pop().toLowerCase();
+    let t = name.split('.');
+    if (t.length > 1) {
+      let ext = t.pop().split('.').pop();
+      if (ext === 'jpg' || ext === 'jpeg' || ext === 'png') return 'IMAGE';
+      // TODO: determine if node content is valid UTF-8 string
+      return 'IMAGE';
+    }
+    return '';
+  };
+
+  let buildRoot = async () => {
+    let openOptions = [];
+
+    let isDir = await fs.dirExists(absPath); // fileType === 'DIR';
+    let isCopiableContent = !isMulti && !isDir && !!fileContentCopiers[await quickTypeDetermination(fs, absPath)];
+
+    let extOptions = await Promise.resolve(buildExtMenu([]));
+
+    if (!isMulti) {
+      if (isDir) {
+        if (isDirInterior) {
+          openOptions = [
+            // createMenuItem('view', "View Mode >"),
+            // createMenuItem('ordering', "Order By >"),
+          ];
+        } else {
+          openOptions = [
+            createMenuItem('open', "Open"),
+            createMenuItem('open:/system/tools/files', "Open in New Window"),
+          ];
+        }
+      } else {
+        let execCheck = await fs.getExecInfo(absPath);
+        if (execCheck.isValid) {
+          openOptions = [
+            createMenuItem('run', "Run"),
+          ];
+        } else {
+          let t = absPath.split('/').pop().split('.');
+          let appPaths = [];
+          if (t.length > 1) {
+            let ext = t.pop();
+            appPaths = await os.FileActions.getAppsForExt(ext);
+          }
+          if (appPaths.length > 0) {
+            openOptions = await Promise.all(appPaths.map(async path => {
+              let app = await fs.getExecInfo(path);
+              if (app.isValid) {
+                let m = createMenuItem('open:' + path, "Open in " + app.name);
+                m.withIcon(app.icon || os.IconStore.getIconByPurpose('EXEC', true));
+                return m;
+              }
+            }));
+          }
+        }
+      }
+    }
+
+    return createMenu(
+      openOptions,
+      (!isMulti && !isDir) ? createMenuItem('openwith', "Open With...") : null,
+      createMenuSep(),
+      isDirInterior ? [
+        createMenuItem('paste', "Paste"),
+        // createMenuItem('pasteas', "Paste As"),
+        // createMenuItem('bulkrename', "Bulk Rename"),
+      ] : [
+        createMenuItem('cut', "Cut"),
+        createMenuItem('copy', "Copy"),
+        isCopiableContent ? createMenuItem('copycontent', "Copy Content") : null,
+        !isMulti ? createMenuItem('rename', "Rename") : null,
+        createMenuItem('del', "Delete"),
+      ],
+      createMenuSep(),
+      isDirInterior ? [
+        // createMenuItem('new', 'New >'),
+        createMenuSep(),
+      ] : null,
+      !isMulti && isDir ? [
+        createMenuItem('openterm', "Open in Terminal"),
+        createMenuSep(),
+      ] : null,
+      createMenuItem('copypath', isMulti ? "Copy Paths" : "Copy Path"),
+      !isMulti ? createMenuItem('prop', 'Properties') : null,
+      extOptions,
+    );
+  };
+
+  let launchFile = () => os.FileActions.launchFile(absPath, fs.getParent(absPath));
+  let launchApp = (appPath) => os.ExecutionEngine.launchFile(appPath, [absPath], fs.getParent(absPath));
+
+  let buildMenu = async idChain => {
+    if (idChain.length === 0) return buildRoot();
+
+    let extOptions = await Promise.resolve(buildExtMenu(idChain))
+
+    switch (idChain[0]) {
+      case 'open':
+        return createCommand(async () => {
+          if (openOverride) {
+            let stopper = Util.createEventStopper();
+            await Promise.resolve(openOverride(stopper.buildEvent()));
+            if (stopper.isStopped()) return;
+          }
+          launchFile();
+        });
+
+      case 'openwith': return createCommand(() => launchApp('/system/tools/openwith'));
+
+      case 'run': return createCommand(launchFile);
+      case 'prop': return createCommand(() => launchApp('/system/tools/fileprops'));
+      case 'openterm': return createCommand(() => launchApp('/system/tools/terminal'));
+      case 'del': return createCommand(async () => {
+        let fs = os.FsRoot;
+        let dir = Math.floor(Util.getTime()) + '_' + Util.generateId(7);
+        await Promise.all(absPaths.map(path => {
+          if (path.startsWith('/deleted/')) {
+            return fs.del(path);
+          }
+          return fs.move(path, '/deleted/' + dir + '/' + path + '.tmp');
+        }));
+        refreshCb();
+      });
+      case 'rename': return createCommand(() => {
+        os.Shell.DialogFactory.showRename(pid, absPath);
+      });
+
+      case 'cut':
+      case 'copy':
+        return createCommand(() => os.Clipboard.copyFiles(absPaths, idChain[0] === 'cut'));
+
+      case 'copypath':
+        return createCommand(() => os.Clipboard.copyText(absPaths.join('\n')));
+
+      case 'copycontent':
+        return createCommand(async () => {
+          let path = absPaths[0];
+          let type = await quickTypeDetermination(fs, path);
+          let copier = fileContentCopiers[type] || Util.noop;
+          copier(path);
+        });
+
+      case 'paste': return createCommand(async () => {
+        let files = await os.Clipboard.paste('FILES');
+        if (files.type === 'FILES') {
+          let fs = os.FsRoot;
+          for (let file of files.paths) {
+            if (file === '/') return;
+            let parent = fs.getParent(file);
+            if (absPath === parent && files.isCut) continue;
+
+            let targetFileName = file.split('/').pop();
+            let parts = targetFileName.split('.');
+            let ext;
+            let name;
+            if (parts.length > 1) {
+              ext = '.' + parts.pop();
+              name = parts.join('.');
+              if (!name.length) {
+                name += ext;
+                ext = '';
+              }
+            } else {
+              name = targetFileName;
+              ext = '';
+            }
+
+            let counter = 0;
+            let targetPath = null;
+            while (!targetPath) {
+              if (counter === 0) {
+                targetPath = fs.join(absPath, name + ext);
+              } else if (counter === 1) {
+                targetPath = fs.join(absPath, name + ' (Copy)' + ext);
+              } else {
+                targetPath = fs.join(absPath, name + ' (Copy ' + counter + ')' + ext);
+              }
+              if (await fs.pathExists(targetPath)) {
+                targetPath = null;
+                counter++;
+              }
+            }
+
+            if (files.isCut) {
+              await fs.move(file, targetPath);
+            } else {
+              await fs.copy(file, targetPath);
+            }
+          }
+        }
+      });
+    }
+
+    if (idChain[0].startsWith('open:')) {
+      let path = idChain[0].substring(5);
+      return createCommand(() => launchApp(path));
+    }
+
+    if (extOptions) return extOptions;
+  };
+
+  let showAtPointerEvent = async (ev) => {
+    let el = await buildRootMenuElement(buildMenu, true);
+    os.Shell.openModalAtMouseEvent(ev, el);
+  };
+
+  return Object.freeze({
+    showAtPointerEvent,
+  });
+});
 
 return Object.freeze({ Util, HtmlUtil, PlexiFS, create: createPlexiOs, staticAppRegistry, awaitAllJavaScriptLoaders, registerJavaScriptLoader, registerJavaScript, loadJavaScript, lockJavaScriptLoader, createImageUtil, terminalSession });
 })();

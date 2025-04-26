@@ -1,77 +1,86 @@
 PlexiOS.registerJavaScript('image', 'default', async (imgUtil) => {
 
-  imgUtil.setEnvironmentVariable('PATH', [
-    '/apps',
-    '/system/tools',
-  ].join(';'));
-  imgUtil.setEnvironmentVariable('TMPDIR', '/tmp');
-
-  for (let dir of [
-    'appdata',
-    'apps',
-    'system',
-    'system/config',
-    'system/libraries',
-    'system/res',
-    'system/screensavers',
-    'system/themes',
-    'system/tools',
-    'system/wallpapers',
-    'home/config',
-    'home/desktop',
-    'home/documents',
-    'tmp',
-    'volumes',
-  ]) {
-    await imgUtil.ensureDirExists(dir);
-  }
-
-  await imgUtil.makeVirtualJsFile('/system/screensavers/blank.scr', 'screensaver', 'io.plexi.screensaver.blank');
-
-  await imgUtil.makeTextFile('/system/config/settings.json', '{}');
-
-  let simpleIdToName = {
-    'fileprops': ["File Properties", PLEXI_IMAGE_B64('tools/fileprops/icon.png')],
-    'files': ["File Browser", PLEXI_IMAGE_B64('tools/files/icon.png'), true, true],
-    'openwith': ["Open with...", PLEXI_IMAGE_B64('tools/openwith/icon.png')],
-    'plexic': ["Plexi Compile", PLEXI_IMAGE_B64('tools/files/icon.png')],
-    'proclist': ["Process List", PLEXI_IMAGE_B64('tools/proclist/icon.png')],
-    'screensaver': ["Screensaver", PLEXI_IMAGE_B64('tools/screensaver/icon.png')],
-    'settings': ["Settings", PLEXI_IMAGE_B64('tools/settings/icon.png'), true],
-    'sleep': ["Sleep", PLEXI_IMAGE_B64('tools/sleep/icon.png')],
-    'terminal': ["Terminal", PLEXI_IMAGE_B64('tools/terminal/icon.png'), true, true],
-    'themeloader': ["Theme Loader", PLEXI_IMAGE_B64('tools/themeloader/icon.png')],
-
-    // These should not be here. However, this is just where they will live
-    // until they get re-written into PlexiScript.
-    // Additionally some of these are a bit heavy for their purpose and there
-    // should still be a lightweight alternative tool that comes with all
-    // PlexiOS instances by default (such as viewing an image or simple plain
-    // text editor).
-    'solitaire': ["Solitaire", PLEXI_IMAGE_B64('tools/solitaire/icon.png'), true],
-    'minesweeper': ["Minesweeper", PLEXI_IMAGE_B64('tools/minesweeper/icon.png'), true],
-    'draw': ["Draw", PLEXI_IMAGE_B64('tools/draw/icon.png'), true],
-    'imageviewer': ["Image Viewer", PLEXI_IMAGE_B64('tools/imageviewer/icon.png'), true],
-    'notepad': ["Notepad", PLEXI_IMAGE_B64('tools/notepad/icon.png'), true],
-    'skiflea': ["Ski Flea", PLEXI_IMAGE_B64('tools/skiflea/icon.png'), true],
-    'youtube': ["YouTube", PLEXI_IMAGE_B64('tools/youtube/icon.png')],
+  let initializeEnvironmentVariables = async () => {
+    imgUtil.setEnvironmentVariable('PATH', [
+      '/apps',
+      '/system/tools',
+    ].join(';'));
+    imgUtil.setEnvironmentVariable('TMPDIR', '/tmp');
   };
 
-  let promises = Object.keys(simpleIdToName).map(async id => {
-    let [name, iconB64, inLauncher, pinTaskbar] = simpleIdToName[id];
-    await imgUtil.installApp('/system/tools/' + id, 'io.plexi.tools.' + id, { name, iconB64, inLauncher: !!inLauncher });
-    if (pinTaskbar) await imgUtil.pinToTaskbar('/system/tools/' + id);
-  });
+  let initializeFileStructure = async () => {
+    for (let dir of [
+      'appdata',
+      'apps',
+      'system',
+      'system/config',
+      'system/libraries',
+      'system/res',
+      'system/screensavers',
+      'system/themes',
+      'system/tools',
+      'system/wallpapers',
+      'home/config',
+      'home/desktop',
+      'home/documents',
+      'tmp',
+      'volumes',
+    ]) {
+      await imgUtil.ensureDirExists(dir);
+    }
+  };
 
-  await Promise.all(promises);
+  let createDefaultScreensavers = async () => {
+    await imgUtil.makeVirtualJsFile('/system/screensavers/blank.scr', 'screensaver', 'io.plexi.screensaver.blank');
+  };
 
-  // Install terminal commands.
-  for (let t of [...PlexiOS.Util.getTermCmdSet()]) {
-    await imgUtil.installApp('/system/tools/' + t, 'io.plexi.tools.' + t, { name: t });
-  }
+  let createSettingsFile = async () => {
+    await imgUtil.makeTextFile('/system/config/settings.json', '{}');
+  };
 
+  let installSystemToolsAndTermCommands = async () => {
+    let simpleIdToName = {
+      'fileprops': ["File Properties", PLEXI_IMAGE_B64('tools/fileprops/icon.png')],
+      'files': ["File Browser", PLEXI_IMAGE_B64('tools/files/icon.png'), true, true],
+      'openwith': ["Open with...", PLEXI_IMAGE_B64('tools/openwith/icon.png')],
+      'plexic': ["Plexi Compile", PLEXI_IMAGE_B64('tools/files/icon.png')],
+      'proclist': ["Process List", PLEXI_IMAGE_B64('tools/proclist/icon.png')],
+      'screensaver': ["Screensaver", PLEXI_IMAGE_B64('tools/screensaver/icon.png')],
+      'settings': ["Settings", PLEXI_IMAGE_B64('tools/settings/icon.png'), true],
+      'sleep': ["Sleep", PLEXI_IMAGE_B64('tools/sleep/icon.png')],
+      'terminal': ["Terminal", PLEXI_IMAGE_B64('tools/terminal/icon.png'), true, true],
+      'themeloader': ["Theme Loader", PLEXI_IMAGE_B64('tools/themeloader/icon.png')],
 
-  {
+      // These should not be here. However, this is just where they will live
+      // until they get re-written into PlexiScript.
+      // Additionally some of these are a bit heavy for their purpose and there
+      // should still be a lightweight alternative tool that comes with all
+      // PlexiOS instances by default (such as viewing an image or simple plain
+      // text editor).
+      'solitaire': ["Solitaire", PLEXI_IMAGE_B64('tools/solitaire/icon.png'), true],
+      'minesweeper': ["Minesweeper", PLEXI_IMAGE_B64('tools/minesweeper/icon.png'), true],
+      'draw': ["Draw", PLEXI_IMAGE_B64('tools/draw/icon.png'), true],
+      'imageviewer': ["Image Viewer", PLEXI_IMAGE_B64('tools/imageviewer/icon.png'), true],
+      'notepad': ["Notepad", PLEXI_IMAGE_B64('tools/notepad/icon.png'), true],
+      'skiflea': ["Ski Flea", PLEXI_IMAGE_B64('tools/skiflea/icon.png'), true],
+      'youtube': ["YouTube", PLEXI_IMAGE_B64('tools/youtube/icon.png')],
+    };
+
+    let promises = Object.keys(simpleIdToName).map(async id => {
+      let [name, iconB64, inLauncher, pinTaskbar] = simpleIdToName[id];
+      await imgUtil.installApp('/system/tools/' + id, 'io.plexi.tools.' + id, { name, iconB64, inLauncher: !!inLauncher });
+      if (pinTaskbar) await imgUtil.pinToTaskbar('/system/tools/' + id);
+    });
+
+    // Install terminal commands.
+    for (let t of [...PlexiOS.Util.getTermCmdSet()]) {
+      promises.push(imgUtil.installApp('/system/tools/' + t, 'io.plexi.tools.' + t, { name: t }));
+    }
+
+    await Promise.all(promises);
+  };
+
+  let generateLauncherIconInDefaultTheme = async () => {
     let launcherIcon = PlexiOS.HtmlUtil.canvasOfSize(64, 64);
     let ctx = launcherIcon.getContext('2d');
     ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
@@ -87,10 +96,10 @@ PlexiOS.registerJavaScript('image', 'default', async (imgUtil) => {
       }
     }
     await imgUtil.makeCanvasBasedImageFile('/system/res/launcher-btn.png', launcherIcon);
-  }
+  };
 
-  {
-    // TODO: unless this starts being used in multiple places, just embed these canvas generators into the files app itself.
+  // TODO: unless this starts being used in multiple places, just embed these canvas generators into the files app itself.
+  let createFilesAppIcons = async () => {
     let drawIcons = (cols, count, tileSize, margin) => {
       let canvas = PlexiOS.HtmlUtil.canvasOfSize(64, 64);
       let ctx = canvas.getContext('2d');
@@ -125,8 +134,56 @@ PlexiOS.registerJavaScript('image', 'default', async (imgUtil) => {
     img.ctx.fillStyle = g;
     img.ctx.fillRect(12, 12, 40, 40);
     await imgUtil.makeCanvasBasedImageFile('/system/res/files-thumbs.png', img.canvas);
+  };
 
-  }
+  let installThemes = async () => {
+    await imgUtil.installTheme('io.plexi.theme.default', "Plexi Default");
+  };
 
-  await imgUtil.installTheme('io.plexi.theme.default', "Plexi Default");
+  let initializeFileAssociations = async () => {
+
+    // TODO: do not build this unless the file is missing.
+    let initialConfig = [
+      'SCR:/system/tools/screensaver:Screensaver',
+      'THEME:/system/tools/themeloader:Theme',
+      'TXT:[T]:Text File',
+      'JSON:[T]:JSON File',
+      'XML:[T]:XML File',
+      'PX:[T]:Plexi Source Code',
+      'PNG:[I]:PNG Image',
+      'JPG:[I]:JPEG Image',
+      'BMP:[I]:Bitmap Image',
+      'GIF:[I]:GIF Image',
+      // TODO: implement video/sound player app as [A] and [V] or just a general media player.
+      // 'MP3:[A]:MP3 Audio',
+      // 'OGG:[A]:Ogg Vorbis Audio',
+      // 'WAV:[A]:PCM Wave Sound',
+      // 'MID:[A]:MIDI Song',
+      // 'AVI:[V]:AVI Video',
+      // 'MPG:[V]:MPEG Video',
+    ];
+    let entries = initialConfig
+      .join('\n')
+      .replaceAll('[T]', '/system/tools/notepad')
+      .replaceAll('[I]', '/system/tools/imageviewer')
+      .split('\n')
+      .map(t => {
+        let [ext, app, name] = t.split(':');
+        return { ext, app, name };
+      });
+
+    await imgUtil.makeTextFile(
+      '/home/config/file-ext-apps.json',
+      JSON.stringify({ entries }));
+  };
+
+  await initializeEnvironmentVariables();
+  await initializeFileStructure();
+  await createDefaultScreensavers();
+  await createSettingsFile();
+  await installSystemToolsAndTermCommands();
+  await createFilesAppIcons();
+  await generateLauncherIconInDefaultTheme();
+  await installThemes();
+  await initializeFileAssociations();
 });

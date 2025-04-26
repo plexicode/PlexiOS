@@ -51,6 +51,9 @@ const APP_MAIN = async (os, procInfo, args) => {
   }
   dstPath = fs.getAbsolutePath(dstPath);
 
+  let resPaths = [];
+  let resPathPerMod = {};
+
   for (let moduleInfo of data.modules) {
     let { name, source } = moduleInfo;
     if (!name || typeof name !== 'string') {
@@ -64,15 +67,24 @@ const APP_MAIN = async (os, procInfo, args) => {
       return failWithError("The project file contains multiple definitions for the module '" + name + "'.");
     }
     let moduleDir = fs.getAbsolutePath(fs.join(projectDir, source));
+
+    resPathPerMod[name] = moduleDir;
+
     let files = {};
     let fileList = await fs.listRecursive(moduleDir, { useStructs: true });
-    for (let file of fileList.filter(f => f.relative.toLowerCase().endsWith('.px'))) {
-      let { relative, absolute } = file;
-      let { ok, text } = await fs.fileReadText(absolute);
-      if (!ok) {
-        return failWithError("There was an error while reading the source files. They were likely updated while compilation was occuring.");
+
+    for (let file of fileList) {
+      let isCode = file.relative.toLowerCase().endsWith('.px');
+      if (isCode) {
+        let { relative, absolute } = file;
+        let { ok, text } = await fs.fileReadText(absolute);
+        if (!ok) {
+          return failWithError("There was an error while reading the source files. They were likely updated while compilation was occuring.");
+        }
+        files[relative] = text;
+      } else {
+        resPaths.push(name + '/' + file.relative);
       }
-      files[relative] = text;
     }
     srcByModule[name] = files;
   }
@@ -81,16 +93,37 @@ const APP_MAIN = async (os, procInfo, args) => {
     return failWithError("The main module '" + mainModule + "' does not exist in the list of modules provided in the project file.");
   }
 
-  let compilationResult = await PlexiScript.compile(mainModule, srcByModule);
-  if (compilationResult.byteCodeB64) {
+  let resLoader = async (canonPath) => {
+    let parts = canonPath.split('/');
+    let modId = parts[0];
+    let relPath = parts.slice(1).join('/');
+    let modPath = resPathPerMod[modId];
+    let resAbsPath = fs.getAbsolutePath(modPath + '/./' + relPath);
+    if (!resAbsPath.startsWith(modPath)) throw new Error('Invalid Path');
+    return await fs.fileReadBinaryForced(resAbsPath, true);
+  };
+
+  let compilationResult = await PlexiScript.compile(mainModule, srcByModule, resPaths, resLoader);
+  if (compilationResult.ok) {
+
+    let { bytes, icon, title, id } = compilationResult;
+    let keyedData = {
+      icon: icon || null,
+      title: title || '',
+      id: id || null,
+    };
+
     let dstParent = fs.getParent(dstPath);
     await fs.mkdirs(dstParent);
-    await fs.fileWriteText(dstPath, compilationResult.byteCodeB64);
-  } else if (compilationResult.errorMessage) {
-    return failWithError('' + compilationResult.errorMessage);
-  } else {
-    throw new Error(); // should not happen.
+    await fs.fileWriteBinary(dstPath, bytes, keyedData);
+    return;
   }
+
+  if (compilationResult.errorMessage) {
+    return failWithError('' + compilationResult.errorMessage);
+  }
+
+  throw new Error(); // should not happen.
 };
 PlexiOS.registerJavaScript('app', 'io.plexi.tools.plexic', APP_MAIN);
 })();
